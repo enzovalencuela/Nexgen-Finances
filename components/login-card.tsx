@@ -13,9 +13,9 @@ export function LoginCard() {
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-accent/80">Nexgen Finance</p>
-          <h1 className="text-[1.75rem] font-semibold text-slate-900">Controle financeiro com acesso seguro</h1>
-          <p className="text-[13px] leading-6 text-slate-600">
+          <p className="text-xs uppercase tracking-[0.3em] text-accent/80 dark:text-violet-300">Nexgen Finance</p>
+          <h1 className="text-[1.75rem] font-semibold text-slate-900 dark:text-slate-100">Controle financeiro com acesso seguro</h1>
+          <p className="text-[13px] leading-6 text-slate-600 dark:text-slate-400">
             Login com Google via NextAuth, sessão persistida e dados separados por usuário.
           </p>
         </div>
