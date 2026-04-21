@@ -3,6 +3,7 @@ import { AssetType, type Investment } from "@prisma/client";
 import { deleteInvestment, updateInvestment } from "@/app/actions";
 import { assetTypeLabels } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -32,13 +33,7 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
       </summary>
 
       <div className="mt-4 border-t border-white/10 pt-4">
-        <form
-          action={async (formData) => {
-            "use server";
-            await updateInvestment(formData);
-          }}
-          className="grid gap-3"
-        >
+        <ActionForm serverAction={updateInvestment} className="grid gap-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={investment.id} />
           <div className="grid gap-3 md:grid-cols-2">
             <Input name="name" defaultValue={investment.name} />
@@ -66,20 +61,14 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
               Salvar
             </Button>
           </div>
-        </form>
+        </ActionForm>
 
-        <form
-          action={async (formData) => {
-            "use server";
-            await deleteInvestment(formData);
-          }}
-          className="mt-3"
-        >
+        <ActionForm serverAction={deleteInvestment} className="mt-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={investment.id} />
           <Button type="submit" variant="ghost" className="px-0 text-rose-300 hover:text-rose-200">
             Excluir investimento
           </Button>
-        </form>
+        </ActionForm>
       </div>
     </details>
   );

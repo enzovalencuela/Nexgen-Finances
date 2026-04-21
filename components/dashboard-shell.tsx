@@ -9,6 +9,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { EditableInvestmentCard } from "@/components/editable-investment-card";
 import { EditableTransactionCard } from "@/components/editable-transaction-card";
 import { ClassificationPieChart, OverviewBarChart } from "@/components/monthly-charts";
+import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Panel } from "@/components/ui/panel";
@@ -507,7 +508,7 @@ function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form action={createTransaction} className="grid gap-3">
+    <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
       <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Pai" required />
       <Input name="description" placeholder="Observacao ou detalhe" />
       <div className="grid gap-3 md:grid-cols-2">
@@ -557,13 +558,13 @@ function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
         <Input name="installmentTotal" type="number" min="1" placeholder="Total de parcelas" />
       </div>
       <Button type="submit">Salvar item</Button>
-    </form>
+    </ActionForm>
   );
 }
 
 function CreditCardForm() {
   return (
-    <form action={createCreditCard} className="grid gap-3">
+    <ActionForm serverAction={createCreditCard} className="grid gap-3" resetOnSuccess>
       <Input name="name" placeholder="Ex: Inter Black" required />
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="brand" placeholder="Bandeira" />
@@ -576,7 +577,7 @@ function CreditCardForm() {
       <Button type="submit" variant="secondary">
         Adicionar cartao
       </Button>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -608,7 +609,7 @@ function InvestmentForm() {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form action={createInvestment} className="grid gap-3">
+    <ActionForm serverAction={createInvestment} className="grid gap-3" resetOnSuccess>
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="name" placeholder="Ex: CDB Liquidez Diaria" required />
         <Input name="ticker" placeholder="Ticker" />
@@ -635,7 +636,7 @@ function InvestmentForm() {
       <Button type="submit" variant="secondary">
         Salvar investimento
       </Button>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -663,7 +664,7 @@ function SummaryForm({
   summaryMeta: { salaryBase: number; purchaseEstimate: number; investmentWithdrawn: number; noteText: string };
 }) {
   return (
-    <form action={upsertSummary} className="grid gap-3">
+    <ActionForm serverAction={upsertSummary} className="grid gap-3">
       <Input type="month" name="monthReference" defaultValue={selectedMonth} required />
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="salaryBase" type="number" step="0.01" placeholder="Salario base" defaultValue={summaryMeta.salaryBase} />
@@ -678,6 +679,6 @@ function SummaryForm({
       <Button type="submit" variant="secondary">
         Salvar fechamento
       </Button>
-    </form>
+    </ActionForm>
   );
 }

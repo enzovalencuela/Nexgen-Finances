@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { AssetType, TransactionCategory, TransactionStatus, TransactionType } from "@prisma/client";
 import { z } from "zod";
 
+import { errorResult, successResult, type ActionResult } from "@/lib/action-result";
 import { getRequiredCurrentUser } from "@/lib/current-user";
 import { getPrisma } from "@/lib/prisma";
 import { stringifySummaryMeta } from "@/lib/summary-meta";
@@ -87,277 +88,329 @@ async function getCurrentUserId() {
   return user.id;
 }
 
-export async function createTransaction(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
+export async function createTransaction(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
 
-  const parsed = transactionSchema.parse({
-    title: formData.get("title"),
-    description: formData.get("description") || undefined,
-    type: formData.get("type"),
-    category: formData.get("category"),
-    amount: formData.get("amount"),
-    transactionDate: formData.get("transactionDate"),
-    status: formData.get("status"),
-    source: formData.get("source") || undefined,
-    isCreditCard: formData.get("isCreditCard") === "on",
-    installmentCurrent: formData.get("installmentCurrent") || undefined,
-    installmentTotal: formData.get("installmentTotal") || undefined,
-    creditCardId: formData.get("creditCardId") || undefined
-  });
+    const parsed = transactionSchema.parse({
+      title: formData.get("title"),
+      description: formData.get("description") || undefined,
+      type: formData.get("type"),
+      category: formData.get("category"),
+      amount: formData.get("amount"),
+      transactionDate: formData.get("transactionDate"),
+      status: formData.get("status"),
+      source: formData.get("source") || undefined,
+      isCreditCard: formData.get("isCreditCard") === "on",
+      installmentCurrent: formData.get("installmentCurrent") || undefined,
+      installmentTotal: formData.get("installmentTotal") || undefined,
+      creditCardId: formData.get("creditCardId") || undefined
+    });
 
-  await prisma.transaction.create({
-    data: {
-      userId,
-      title: parsed.title,
-      description: parsed.description,
-      type: parsed.type,
-      category: parsed.category,
-      amount: parsed.amount,
-      transactionDate: new Date(parsed.transactionDate),
-      status: parsed.status,
-      source: parsed.source,
-      isCreditCard: parsed.isCreditCard ?? false,
-      installmentCurrent: parsed.installmentCurrent,
-      installmentTotal: parsed.installmentTotal,
-      creditCardId: parsed.creditCardId || null
-    }
-  });
-
-  revalidatePath("/");
-}
-
-export async function updateTransaction(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-
-  const parsed = transactionUpdateSchema.parse({
-    id: formData.get("id"),
-    title: formData.get("title"),
-    description: formData.get("description") || undefined,
-    type: formData.get("type"),
-    category: formData.get("category"),
-    amount: formData.get("amount"),
-    transactionDate: formData.get("transactionDate"),
-    status: formData.get("status"),
-    source: formData.get("source") || undefined,
-    isCreditCard: formData.get("isCreditCard") === "on",
-    installmentCurrent: formData.get("installmentCurrent") || undefined,
-    installmentTotal: formData.get("installmentTotal") || undefined,
-    creditCardId: formData.get("creditCardId") || undefined
-  });
-
-  const result = await prisma.transaction.updateMany({
-    where: {
-      id: parsed.id,
-      userId
-    },
-    data: {
-      title: parsed.title,
-      description: parsed.description,
-      type: parsed.type,
-      category: parsed.category,
-      amount: parsed.amount,
-      transactionDate: new Date(parsed.transactionDate),
-      status: parsed.status,
-      source: parsed.source,
-      isCreditCard: parsed.isCreditCard ?? false,
-      installmentCurrent: parsed.installmentCurrent,
-      installmentTotal: parsed.installmentTotal,
-      creditCardId: parsed.creditCardId || null
-    }
-  });
-
-  if (result.count === 0) {
-    throw new Error("Lancamento nao encontrado para edicao.");
-  }
-
-  revalidatePath("/");
-}
-
-export async function deleteTransaction(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const id = z.string().min(1).parse(formData.get("id"));
-
-  const result = await prisma.transaction.deleteMany({
-    where: {
-      id,
-      userId
-    }
-  });
-
-  if (result.count === 0) {
-    throw new Error("Lancamento nao encontrado para exclusao.");
-  }
-
-  revalidatePath("/");
-}
-
-export async function createInvestment(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const parsed = investmentSchema.parse({
-    name: formData.get("name"),
-    ticker: formData.get("ticker") || undefined,
-    assetType: formData.get("assetType"),
-    institution: formData.get("institution") || undefined,
-    quantity: formData.get("quantity") || undefined,
-    amountBRL: formData.get("amountBRL"),
-    usdRate: formData.get("usdRate") || undefined,
-    referenceDate: formData.get("referenceDate"),
-    notes: formData.get("notes") || undefined
-  });
-
-  const amountUSD = parsed.usdRate ? parsed.amountBRL / parsed.usdRate : undefined;
-
-  await prisma.investment.create({
-    data: {
-      userId,
-      name: parsed.name,
-      ticker: parsed.ticker,
-      assetType: parsed.assetType,
-      institution: parsed.institution,
-      quantity: parsed.quantity,
-      amountBRL: parsed.amountBRL,
-      usdRate: parsed.usdRate,
-      amountUSD,
-      referenceDate: new Date(parsed.referenceDate),
-      notes: parsed.notes
-    }
-  });
-
-  revalidatePath("/");
-}
-
-export async function updateInvestment(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const parsed = investmentUpdateSchema.parse({
-    id: formData.get("id"),
-    name: formData.get("name"),
-    ticker: formData.get("ticker") || undefined,
-    assetType: formData.get("assetType"),
-    institution: formData.get("institution") || undefined,
-    quantity: formData.get("quantity") || undefined,
-    amountBRL: formData.get("amountBRL"),
-    amountUSD: formData.get("amountUSD") || undefined,
-    referenceDate: formData.get("referenceDate"),
-    notes: formData.get("notes") || undefined
-  });
-
-  const result = await prisma.investment.updateMany({
-    where: {
-      id: parsed.id,
-      userId
-    },
-    data: {
-      name: parsed.name,
-      ticker: parsed.ticker,
-      assetType: parsed.assetType,
-      institution: parsed.institution,
-      quantity: parsed.quantity,
-      amountBRL: parsed.amountBRL,
-      amountUSD: parsed.amountUSD,
-      referenceDate: new Date(parsed.referenceDate),
-      notes: parsed.notes
-    }
-  });
-
-  if (result.count === 0) {
-    throw new Error("Investimento nao encontrado para edicao.");
-  }
-
-  revalidatePath("/");
-}
-
-export async function deleteInvestment(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const id = z.string().min(1).parse(formData.get("id"));
-
-  const result = await prisma.investment.deleteMany({
-    where: {
-      id,
-      userId
-    }
-  });
-
-  if (result.count === 0) {
-    throw new Error("Investimento nao encontrado para exclusao.");
-  }
-
-  revalidatePath("/");
-}
-
-export async function upsertSummary(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const parsed = summarySchema.parse({
-    monthReference: formData.get("monthReference"),
-    cashBalance: formData.get("cashBalance"),
-    digitalBalance: formData.get("digitalBalance"),
-    salaryBase: formData.get("salaryBase") || undefined,
-    purchaseEstimate: formData.get("purchaseEstimate") || undefined,
-    investmentWithdrawn: formData.get("investmentWithdrawn") || undefined,
-    noteText: formData.get("noteText") || undefined
-  });
-
-  const note = stringifySummaryMeta({
-    salaryBase: parsed.salaryBase,
-    purchaseEstimate: parsed.purchaseEstimate,
-    investmentWithdrawn: parsed.investmentWithdrawn,
-    noteText: parsed.noteText
-  });
-
-  const [year, month] = parsed.monthReference.split("-").map(Number);
-  const monthReference = new Date(year, month - 1, 1);
-
-  await prisma.summary.upsert({
-    where: {
-      userId_monthReference: {
+    await prisma.transaction.create({
+      data: {
         userId,
-        monthReference
+        title: parsed.title,
+        description: parsed.description,
+        type: parsed.type,
+        category: parsed.category,
+        amount: parsed.amount,
+        transactionDate: new Date(parsed.transactionDate),
+        status: parsed.status,
+        source: parsed.source,
+        isCreditCard: parsed.isCreditCard ?? false,
+        installmentCurrent: parsed.installmentCurrent,
+        installmentTotal: parsed.installmentTotal,
+        creditCardId: parsed.creditCardId || null
       }
-    },
-    update: {
-      cashBalance: parsed.cashBalance,
-      digitalBalance: parsed.digitalBalance,
-      note
-    },
-    create: {
-      userId,
-      monthReference,
-      cashBalance: parsed.cashBalance,
-      digitalBalance: parsed.digitalBalance,
-      note
-    }
-  });
+    });
 
-  revalidatePath("/");
+    revalidatePath("/");
+    return successResult("Item salvo com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel salvar o item.");
+  }
 }
 
-export async function createCreditCard(formData: FormData) {
-  const userId = await getCurrentUserId();
-  const prisma = getPrisma();
-  const parsed = creditCardSchema.parse({
-    name: formData.get("name"),
-    brand: formData.get("brand") || undefined,
-    closingDay: formData.get("closingDay") || undefined,
-    dueDay: formData.get("dueDay") || undefined,
-    note: formData.get("note") || undefined
-  });
+export async function updateTransaction(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
 
-  await prisma.creditCard.create({
-    data: {
-      userId,
-      name: parsed.name,
-      brand: parsed.brand,
-      closingDay: parsed.closingDay,
-      dueDay: parsed.dueDay,
-      note: parsed.note
+    const parsed = transactionUpdateSchema.parse({
+      id: formData.get("id"),
+      title: formData.get("title"),
+      description: formData.get("description") || undefined,
+      type: formData.get("type"),
+      category: formData.get("category"),
+      amount: formData.get("amount"),
+      transactionDate: formData.get("transactionDate"),
+      status: formData.get("status"),
+      source: formData.get("source") || undefined,
+      isCreditCard: formData.get("isCreditCard") === "on",
+      installmentCurrent: formData.get("installmentCurrent") || undefined,
+      installmentTotal: formData.get("installmentTotal") || undefined,
+      creditCardId: formData.get("creditCardId") || undefined
+    });
+
+    const result = await prisma.transaction.updateMany({
+      where: {
+        id: parsed.id,
+        userId
+      },
+      data: {
+        title: parsed.title,
+        description: parsed.description,
+        type: parsed.type,
+        category: parsed.category,
+        amount: parsed.amount,
+        transactionDate: new Date(parsed.transactionDate),
+        status: parsed.status,
+        source: parsed.source,
+        isCreditCard: parsed.isCreditCard ?? false,
+        installmentCurrent: parsed.installmentCurrent,
+        installmentTotal: parsed.installmentTotal,
+        creditCardId: parsed.creditCardId || null
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Lancamento nao encontrado para edicao.");
     }
-  });
 
-  revalidatePath("/");
+    revalidatePath("/");
+    return successResult("Item editado com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel editar o item.");
+  }
+}
+
+export async function deleteTransaction(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const id = z.string().min(1).parse(formData.get("id"));
+
+    const result = await prisma.transaction.deleteMany({
+      where: {
+        id,
+        userId
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Lancamento nao encontrado para exclusao.");
+    }
+
+    revalidatePath("/");
+    return successResult("Item excluido com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel excluir o item.");
+  }
+}
+
+export async function createInvestment(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const parsed = investmentSchema.parse({
+      name: formData.get("name"),
+      ticker: formData.get("ticker") || undefined,
+      assetType: formData.get("assetType"),
+      institution: formData.get("institution") || undefined,
+      quantity: formData.get("quantity") || undefined,
+      amountBRL: formData.get("amountBRL"),
+      usdRate: formData.get("usdRate") || undefined,
+      referenceDate: formData.get("referenceDate"),
+      notes: formData.get("notes") || undefined
+    });
+
+    const amountUSD = parsed.usdRate ? parsed.amountBRL / parsed.usdRate : undefined;
+
+    await prisma.investment.create({
+      data: {
+        userId,
+        name: parsed.name,
+        ticker: parsed.ticker,
+        assetType: parsed.assetType,
+        institution: parsed.institution,
+        quantity: parsed.quantity,
+        amountBRL: parsed.amountBRL,
+        usdRate: parsed.usdRate,
+        amountUSD,
+        referenceDate: new Date(parsed.referenceDate),
+        notes: parsed.notes
+      }
+    });
+
+    revalidatePath("/");
+    return successResult("Investimento salvo com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel salvar o investimento.");
+  }
+}
+
+export async function updateInvestment(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const parsed = investmentUpdateSchema.parse({
+      id: formData.get("id"),
+      name: formData.get("name"),
+      ticker: formData.get("ticker") || undefined,
+      assetType: formData.get("assetType"),
+      institution: formData.get("institution") || undefined,
+      quantity: formData.get("quantity") || undefined,
+      amountBRL: formData.get("amountBRL"),
+      amountUSD: formData.get("amountUSD") || undefined,
+      referenceDate: formData.get("referenceDate"),
+      notes: formData.get("notes") || undefined
+    });
+
+    const result = await prisma.investment.updateMany({
+      where: {
+        id: parsed.id,
+        userId
+      },
+      data: {
+        name: parsed.name,
+        ticker: parsed.ticker,
+        assetType: parsed.assetType,
+        institution: parsed.institution,
+        quantity: parsed.quantity,
+        amountBRL: parsed.amountBRL,
+        amountUSD: parsed.amountUSD,
+        referenceDate: new Date(parsed.referenceDate),
+        notes: parsed.notes
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Investimento nao encontrado para edicao.");
+    }
+
+    revalidatePath("/");
+    return successResult("Investimento editado com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel editar o investimento.");
+  }
+}
+
+export async function deleteInvestment(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const id = z.string().min(1).parse(formData.get("id"));
+
+    const result = await prisma.investment.deleteMany({
+      where: {
+        id,
+        userId
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Investimento nao encontrado para exclusao.");
+    }
+
+    revalidatePath("/");
+    return successResult("Investimento excluido com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel excluir o investimento.");
+  }
+}
+
+export async function upsertSummary(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const parsed = summarySchema.parse({
+      monthReference: formData.get("monthReference"),
+      cashBalance: formData.get("cashBalance"),
+      digitalBalance: formData.get("digitalBalance"),
+      salaryBase: formData.get("salaryBase") || undefined,
+      purchaseEstimate: formData.get("purchaseEstimate") || undefined,
+      investmentWithdrawn: formData.get("investmentWithdrawn") || undefined,
+      noteText: formData.get("noteText") || undefined
+    });
+
+    const note = stringifySummaryMeta({
+      salaryBase: parsed.salaryBase,
+      purchaseEstimate: parsed.purchaseEstimate,
+      investmentWithdrawn: parsed.investmentWithdrawn,
+      noteText: parsed.noteText
+    });
+
+    const [year, month] = parsed.monthReference.split("-").map(Number);
+    const monthReference = new Date(year, month - 1, 1);
+
+    await prisma.summary.upsert({
+      where: {
+        userId_monthReference: {
+          userId,
+          monthReference
+        }
+      },
+      update: {
+        cashBalance: parsed.cashBalance,
+        digitalBalance: parsed.digitalBalance,
+        note
+      },
+      create: {
+        userId,
+        monthReference,
+        cashBalance: parsed.cashBalance,
+        digitalBalance: parsed.digitalBalance,
+        note
+      }
+    });
+
+    revalidatePath("/");
+    return successResult("Fechamento salvo com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel salvar o fechamento.");
+  }
+}
+
+export async function createCreditCard(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const parsed = creditCardSchema.parse({
+      name: formData.get("name"),
+      brand: formData.get("brand") || undefined,
+      closingDay: formData.get("closingDay") || undefined,
+      dueDay: formData.get("dueDay") || undefined,
+      note: formData.get("note") || undefined
+    });
+
+    await prisma.creditCard.create({
+      data: {
+        userId,
+        name: parsed.name,
+        brand: parsed.brand,
+        closingDay: parsed.closingDay,
+        dueDay: parsed.dueDay,
+        note: parsed.note
+      }
+    });
+
+    revalidatePath("/");
+    return successResult("Cartao salvo com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel salvar o cartao.");
+  }
+}
+
+function toActionError(error: unknown, fallbackMessage: string): ActionResult {
+  if (error instanceof z.ZodError) {
+    return errorResult(error.issues[0]?.message ?? fallbackMessage);
+  }
+
+  if (error instanceof Error) {
+    return errorResult(error.message || fallbackMessage);
+  }
+
+  return errorResult(fallbackMessage);
 }
