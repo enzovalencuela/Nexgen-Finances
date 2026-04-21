@@ -62,13 +62,6 @@ const tapeThemes = {
   }
 } as const;
 
-const heroCards = [
-  { key: "entries" as TotalKey, label: "Total Recebido", icon: ArrowUpCircle, color: "text-cyan-300" },
-  { key: "payables" as TotalKey, label: "Total a Pagar", icon: ArrowDownCircle, color: "text-yellow-200" },
-  { key: "receivables" as TotalKey, label: "Total a Receber", icon: PiggyBank, color: "text-sky-300" },
-  { key: "leftover" as TotalKey, label: "Total Restante", icon: Wallet, color: "text-violet-300" }
-];
-
 export function DashboardShell({
   user,
   selectedMonth,
@@ -84,6 +77,17 @@ export function DashboardShell({
   summary,
   summaryMeta
 }: Props) {
+  const spentAmount = Math.max(totals.entries - totals.leftover, 0);
+  const baseForPercent = totals.entries > 0 ? totals.entries : 1;
+
+  const heroCards = [
+    { id: "entries", label: "Total Recebido", icon: ArrowUpCircle, color: "text-cyan-300", value: totals.entries },
+    { id: "spent", label: "Ja Gastei/Paguei", icon: Landmark, color: "text-fuchsia-300", value: spentAmount },
+    { id: "payables", label: "Total a Pagar", icon: ArrowDownCircle, color: "text-yellow-200", value: totals.payables },
+    { id: "receivables", label: "Total a Receber", icon: PiggyBank, color: "text-sky-300", value: totals.receivables },
+    { id: "leftover", label: "Total Restante", icon: Wallet, color: "text-violet-300", value: totals.leftover }
+  ];
+
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
@@ -109,13 +113,13 @@ export function DashboardShell({
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
                 {heroCards.map((card) => {
                   const Icon = card.icon;
-                  const value = totals[card.key];
+                  const progressWidth = `${Math.max(12, Math.min(100, (card.value / baseForPercent) * 100))}%`;
 
                   return (
-                    <div key={card.key} className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                    <div key={card.id} className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm text-slate-400">{card.label}</p>
                         <div className={cn("shrink-0 rounded-2xl bg-white/5 p-2.5", card.color)}>
@@ -123,10 +127,10 @@ export function DashboardShell({
                         </div>
                       </div>
                       <p className="mt-5 text-[clamp(1.75rem,1.65vw,2.125rem)] font-semibold leading-[0.95] tracking-tight text-white">
-                        {formatCurrency(value)}
+                        {formatCurrency(card.value)}
                       </p>
                       <div className="mt-5 h-2 rounded-full bg-white/5">
-                        <div className={cn("h-2 rounded-full", card.color.replace("text-", "bg-"))} style={{ width: "78%" }} />
+                        <div className={cn("h-2 rounded-full", card.color.replace("text-", "bg-"))} style={{ width: progressWidth }} />
                       </div>
                     </div>
                   );
