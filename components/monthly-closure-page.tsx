@@ -13,10 +13,10 @@ type Props = MonthlyStatementData & {
 };
 
 const themes = {
-  entries: "text-cyan-700",
-  payables: "text-teal-700",
-  receivables: "text-sky-700",
-  expenses: "text-fuchsia-700"
+  entries: "text-cyan-700 dark:text-cyan-300",
+  payables: "text-teal-700 dark:text-teal-300",
+  receivables: "text-sky-700 dark:text-sky-300",
+  expenses: "text-fuchsia-700 dark:text-fuchsia-300"
 } as const;
 
 export function MonthlyClosurePage({
@@ -43,10 +43,10 @@ export function MonthlyClosurePage({
       description="Página principal do seu fechamento mensal, organizada como uma folha de caderno com blocos diretos de leitura."
     >
       <div className="space-y-8">
-        <header className="border-b border-slate-300 pb-4">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Salário / fechamento</p>
-          <h1 className="mt-2 text-[1.4rem] font-semibold text-slate-900">Visão mensal</h1>
-          <p className="mt-1 text-[13px] text-slate-500">Leitura simples das entradas, pendências, contas, sobra e investimentos.</p>
+        <header className="border-b border-slate-300 pb-4 dark:border-slate-800">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Salário / fechamento</p>
+          <h1 className="mt-2 text-[1.4rem] font-semibold text-slate-900 dark:text-slate-100">Visão mensal</h1>
+          <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Leitura simples das entradas, pendências, contas, sobra e investimentos.</p>
         </header>
 
         <section className="grid gap-8 xl:grid-cols-2 xl:items-start">
@@ -124,11 +124,11 @@ export function MonthlyClosurePage({
 
 function NotebookBlock({ title, totalLabel, tone, className, children }: { title: string; totalLabel?: string; tone: "cyan" | "teal" | "blue" | "magenta" | "yellow" | "gray"; className?: string; children: React.ReactNode }) {
   const toneClasses = {
-    cyan: "border-cyan-300 bg-cyan-50",
-    teal: "border-teal-300 bg-teal-50",
-    blue: "border-sky-300 bg-sky-50",
-    magenta: "border-fuchsia-300 bg-fuchsia-50",
-    yellow: "border-yellow-300 bg-yellow-50",
+    cyan: "border-cyan-300 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/30",
+    teal: "border-teal-300 bg-teal-50 dark:border-teal-900 dark:bg-teal-950/30",
+    blue: "border-sky-300 bg-sky-50 dark:border-sky-900 dark:bg-sky-950/30",
+    magenta: "border-fuchsia-300 bg-fuchsia-50 dark:border-fuchsia-900 dark:bg-fuchsia-950/30",
+    yellow: "border-yellow-300 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950/30",
     gray: "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900"
   };
 

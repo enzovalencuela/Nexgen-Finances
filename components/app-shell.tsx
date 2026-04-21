@@ -30,7 +30,7 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
       <div className="mx-auto grid max-w-[1750px] gap-0 rounded-[20px] border border-slate-300 bg-[#efebe4] dark:border-slate-800 dark:bg-[#171a20] lg:grid-cols-[260px_240px_minmax(0,1fr)]">
         <aside className="border-r border-slate-300 bg-[#ece7df] px-3 py-4 dark:border-slate-800 dark:bg-[#151922]">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-700 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-transparent">
               <Image src="/favicon.ico" alt="Nexgen Finance" width={20} height={20} className="h-5 w-5 rounded-sm" />
             </div>
             <div>

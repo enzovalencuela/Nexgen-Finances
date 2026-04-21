@@ -21,7 +21,7 @@ export function TransactionList({
   compact?: boolean;
 }) {
   if (items.length === 0) {
-    return <p className="text-[13px] text-slate-400">{emptyMessage}</p>;
+    return <p className="text-[13px] text-slate-400 dark:text-slate-500">{emptyMessage}</p>;
   }
 
   return (
@@ -45,15 +45,15 @@ export function BucketList({
   accentClass: string;
 }) {
   if (buckets.length === 0) {
-    return <p className="text-[13px] text-slate-400">{emptyMessage}</p>;
+    return <p className="text-[13px] text-slate-400 dark:text-slate-500">{emptyMessage}</p>;
   }
 
   return (
     <div className="space-y-3">
       {buckets.map((bucket) => (
-        <div key={bucket.key} className="rounded-xl border border-slate-300 bg-white p-3">
-          <div className="mb-3 flex items-center justify-between gap-4 border-b border-slate-200 pb-2">
-            <h3 className="text-[13px] font-semibold text-slate-900">{bucket.label}</h3>
+        <div key={bucket.key} className="rounded-xl border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+          <div className="mb-3 flex items-center justify-between gap-4 border-b border-slate-200 pb-2 dark:border-slate-800">
+            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{bucket.label}</h3>
             <p className={cn("text-[13px] font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
           </div>
           <TransactionList items={bucket.items} emptyMessage="Nenhum item." creditCards={creditCards} accentClass={accentClass} compact />
@@ -65,7 +65,7 @@ export function BucketList({
 
 export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   if (creditCards.length === 0) {
-    return <p className="text-[13px] text-slate-500">Nenhum cartão cadastrado ainda.</p>;
+    return <p className="text-[13px] text-slate-500 dark:text-slate-400">Nenhum cartão cadastrado ainda.</p>;
   }
 
   return (
@@ -74,7 +74,7 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
         <div key={creditCard.id} className="space-y-2">
           <Link
             href={`/cartoes/${creditCard.id}`}
-            className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-[13px] text-accent transition hover:bg-accent/10"
+            className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-[13px] text-accent transition hover:bg-accent/10 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-200 dark:hover:bg-violet-950/50"
           >
             Abrir página do cartão
           </Link>
@@ -87,7 +87,7 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
 
 export function InvestmentList({ investments }: { investments: Investment[] }) {
   if (investments.length === 0) {
-    return <p className="text-[13px] text-slate-500">Nenhum ativo registrado neste período.</p>;
+    return <p className="text-[13px] text-slate-500 dark:text-slate-400">Nenhum ativo registrado neste período.</p>;
   }
 
   return (

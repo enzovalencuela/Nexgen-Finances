@@ -24,8 +24,8 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
       <div className="space-y-8">
         <section className="grid gap-8 xl:grid-cols-[320px_1fr]">
           <section>
-            <h2 className="text-[1rem] font-bold uppercase text-slate-900">Totais:</h2>
-            <div className="mt-3 space-y-2 text-[13px] text-slate-800">
+            <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Totais:</h2>
+            <div className="mt-3 space-y-2 text-[13px] text-slate-800 dark:text-slate-200">
               <SummaryRow label="Entradas" value={formatCurrency(totals.entries)} />
               <SummaryRow label="A pagar" value={formatCurrency(totals.payables)} />
               <SummaryRow label="A receber" value={formatCurrency(totals.receivables)} />
@@ -36,8 +36,8 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
           </section>
 
           <section>
-            <h2 className="text-[1rem] font-bold uppercase text-slate-900">Panorama:</h2>
-            <div className="mt-3 rounded-md border border-slate-300 bg-white p-4">
+            <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Panorama:</h2>
+            <div className="mt-3 rounded-md border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
               <OverviewBarChart
                 entries={totals.entries}
                 payables={totals.payables}
@@ -74,20 +74,20 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
 function SimpleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="text-[1rem] font-bold uppercase text-slate-900">{title}:</h2>
-      <div className="mt-3 rounded-md border border-slate-300 bg-white p-3">{children}</div>
+      <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">{title}:</h2>
+      <div className="mt-3 rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">{children}</div>
     </section>
   );
 }
 
 function SummaryRow({ label, value, icon }: { label: string; value: string; icon?: boolean }) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-slate-800 last:mb-0">
+    <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-slate-800 last:mb-0 dark:text-slate-200">
       <div className="flex items-center gap-2">
-        {icon ? <CreditCard className="h-4 w-4 text-slate-500" /> : null}
+        {icon ? <CreditCard className="h-4 w-4 text-slate-500 dark:text-slate-400" /> : null}
         <span>{label}</span>
       </div>
-      <span className="bg-cyan-200 px-1.5 py-0.5 font-semibold text-slate-900">{value}</span>
+      <span className="bg-cyan-200 px-1.5 py-0.5 font-semibold text-slate-900 dark:bg-cyan-900/50 dark:text-cyan-50">{value}</span>
     </div>
   );
 }
