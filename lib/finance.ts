@@ -319,13 +319,11 @@ function buildCardPaymentAdjustments(transactions: TransactionWithCard[]) {
     .filter((transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID && transaction.creditCardId && !transaction.isCreditCard)
     .map<TransactionWithCard>((transaction) => ({
       ...transaction,
-      id: `${transaction.id}-card-payment-adjustment`,
       title: `Abatimento da fatura${transaction.creditCard?.name ? ` - ${transaction.creditCard.name}` : ""}`,
       description: "Pagamento de fatura abatido automaticamente do total do cartao.",
       type: TransactionType.BILL,
       source: "Cartao",
       amount: new Prisma.Decimal(-Number(transaction.amount)),
-      isDerived: true,
       derivedKind: "cardPayment"
     }));
 }
