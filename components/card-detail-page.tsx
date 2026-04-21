@@ -42,7 +42,7 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
         </Link>
       </section>
 
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-3">
           {activeInvoice ? <CurrentInvoiceBlock invoice={activeInvoice} /> : null}
 
@@ -93,15 +93,15 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
           ) : null}
         </div>
 
-        <div className="space-y-3">
-          <Panel>
+        <div className="space-y-4 border-l border-white/10 pl-0 xl:pl-4">
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Compra" title={`Comprar com ${selectedCard.name}`} description="Lançamento direto de compra para este cartão." />
             <div className="mt-3">
               <TransactionForm creditCards={[selectedCard]} mode="cardPurchase" />
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Pagamento" title={`Pagar ${selectedCard.name}`} description="Abate o saldo aberto da fatura deste cartão." />
             <div className="mt-3">
               <TransactionForm creditCards={[selectedCard]} mode="cardPayment" />

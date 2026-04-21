@@ -45,8 +45,8 @@ export function MonthlyClosurePage({
       title="Fechamento do mês"
       description="Leitura direta dos blocos do seu fechamento, com edição rápida e sem cara de dashboard."
     >
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
-        <div className="grid gap-3 lg:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-x-6 gap-y-5 lg:grid-cols-2">
           <WorkSection title={`Entradas • ${formatCurrency(totals.entries)}`}>
             <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={sectionThemes.entries} />
           </WorkSection>
@@ -68,8 +68,8 @@ export function MonthlyClosurePage({
           </WorkSection>
         </div>
 
-        <div className="space-y-3">
-          <Panel>
+        <div className="space-y-4 border-l border-white/10 pl-0 xl:pl-4">
+          <Panel className="bg-transparent px-0 py-0">
             <div className="flex items-center gap-2">
               <NotebookText className="h-4 w-4 text-slate-400" />
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Resumo</p>
@@ -82,14 +82,14 @@ export function MonthlyClosurePage({
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Lançar" title="Novo item" description="Entradas, contas pagas, valores a receber e pendências gerais." />
             <div className="mt-3">
               <TransactionForm creditCards={creditCards} mode="general" />
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Fechar" title="Resumo do mês" description="Números finais e observações do fechamento." />
             <div className="mt-3">
               <SummaryForm
@@ -100,14 +100,14 @@ export function MonthlyClosurePage({
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Investimentos" title="Atualizar posição" description="Cadastro rápido de posição e ajuste." />
             <div className="mt-3">
               <InvestmentForm />
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Cartões" title="Cadastro" description="Cadastro básico de cartão, fechamento e vencimento." />
             <div className="mt-3 space-y-3">
               <CreditCardForm />
@@ -115,7 +115,7 @@ export function MonthlyClosurePage({
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Classificação" title="Distribuição dos gastos" description="Apenas para conferência visual rápida." />
             <div className="mt-3 rounded-xl border border-white/10 bg-[#20252d] p-3">
               <ClassificationPieChart
@@ -134,12 +134,12 @@ export function MonthlyClosurePage({
 
 function WorkSection({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <Panel className={className}>
-      <div className="border-b border-white/10 pb-3">
-        <h2 className="text-[15px] font-semibold text-white">{title}</h2>
+    <section className={className}>
+      <div className="border-b border-white/10 pb-2">
+        <h2 className="text-[14px] font-semibold text-white">{title}</h2>
       </div>
       <div className="mt-3">{children}</div>
-    </Panel>
+    </section>
   );
 }
 

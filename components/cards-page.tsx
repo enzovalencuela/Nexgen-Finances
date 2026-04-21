@@ -23,27 +23,27 @@ export function CardsPage({ user, selectedMonth, creditCards, cardInvoices }: Pr
       title="Cartões"
       description="Compras, pagamentos e leitura da fatura por cartão, em uma estrutura mais direta de trabalho."
     >
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-3">
           {cardInvoices.length === 0 ? <EmptyCardState /> : cardInvoices.map((invoice) => <InvoiceRow key={invoice.creditCard.id} invoice={invoice} creditCards={creditCards} />)}
         </div>
 
-        <div className="space-y-3">
-          <Panel>
+        <div className="space-y-4 border-l border-white/10 pl-0 xl:pl-4">
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Compra" title="Lançar compra no cartão" description="Use apenas para compras. Se for parcelado, informe as parcelas aqui." />
             <div className="mt-3">
               <TransactionForm creditCards={creditCards} mode="cardPurchase" />
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Pagamento" title="Registrar pagamento de fatura" description="O valor entra como abatimento da fatura do cartão." />
             <div className="mt-3">
               <TransactionForm creditCards={creditCards} mode="cardPayment" />
             </div>
           </Panel>
 
-          <Panel>
+          <Panel className="bg-transparent px-0 py-0">
             <SectionHeading eyebrow="Cadastro" title="Cartões cadastrados" description="Cadastro e edição dos cartões." />
             <div className="mt-3 space-y-3">
               <CreditCardForm />
@@ -58,7 +58,7 @@ export function CardsPage({ user, selectedMonth, creditCards, cardInvoices }: Pr
 
 function InvoiceRow({ invoice, creditCards }: { invoice: CardInvoiceView; creditCards: MonthlyStatementData["creditCards"] }) {
   return (
-    <Panel>
+    <section className="border-b border-white/10 pb-4 last:border-b-0">
       <div className="flex flex-col gap-3 border-b border-white/10 pb-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[15px] font-semibold text-white">{invoice.creditCard.name}</p>
@@ -97,7 +97,7 @@ function InvoiceRow({ invoice, creditCards }: { invoice: CardInvoiceView; credit
           </div>
         ))}
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -112,8 +112,8 @@ function MiniPill({ label, value, warning }: { label: string; value: string; war
 
 function EmptyCardState() {
   return (
-    <Panel>
+    <section>
       <SectionHeading eyebrow="Sem movimento" title="Nenhuma fatura encontrada neste mês" description="Cadastre um cartão ou registre uma compra para começar a organizar as faturas." />
-    </Panel>
+    </section>
   );
 }
