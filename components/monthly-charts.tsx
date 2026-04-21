@@ -28,6 +28,26 @@ function tooltipFormatter(value: unknown) {
   return [formatCurrency(normalized), "Valor"] as [string, string];
 }
 
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value?: number | string; color?: string }>; label?: string }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const rawValue = payload[0]?.value;
+  const value = typeof rawValue === "number" ? rawValue : Number(rawValue ?? 0);
+  const color = payload[0]?.color ?? "#e5eefb";
+
+  return (
+    <div className="min-w-44 rounded-2xl border border-white/15 bg-slate-950/95 px-4 py-3 shadow-2xl backdrop-blur-sm">
+      <div className="flex items-center gap-2">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+        <p className="text-sm font-semibold text-white">{label}</p>
+      </div>
+      <p className="mt-2 text-sm text-slate-200">Valor: {formatCurrency(value)}</p>
+    </div>
+  );
+}
+
 export function OverviewBarChart(props: OverviewChartProps) {
   const data = [
     { name: "Entradas", value: props.entries },
@@ -38,20 +58,12 @@ export function OverviewBarChart(props: OverviewChartProps) {
   ];
 
   return (
-    <div className="h-72 w-full">
+    <div className="h-56 w-full sm:h-64">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+        <BarChart data={data} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
           <XAxis dataKey="name" stroke="#94a3b8" tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} />
-          <Tooltip
-            contentStyle={{
-              background: "#081120",
-              border: "1px solid rgba(148,163,184,0.16)",
-              borderRadius: 18,
-              color: "#fff"
-            }}
-            formatter={tooltipFormatter}
-          />
+          <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(Number(value)).replace(",00", "")} width={70} />
+          <Tooltip cursor={{ fill: "rgba(255,255,255,0.06)" }} content={<ChartTooltip />} />
           <Bar dataKey="value" radius={[16, 16, 0, 0]}>
             {data.map((entry, index) => (
               <Cell key={entry.name} fill={overviewColors[index]} />
@@ -81,13 +93,8 @@ export function ClassificationPieChart(props: ClassificationChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Tooltip
-              contentStyle={{
-                background: "#081120",
-                border: "1px solid rgba(148,163,184,0.16)",
-                borderRadius: 18,
-                color: "#fff"
-              }}
-              formatter={tooltipFormatter}
+              cursor={{ fill: "rgba(255,255,255,0.06)" }}
+              content={<ChartTooltip />}
             />
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={92} paddingAngle={4}>
               {data.map((entry, index) => (

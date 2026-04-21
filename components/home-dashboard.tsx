@@ -48,14 +48,14 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
         })}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
         <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
           <SectionHeading
             eyebrow="Panorama"
             title="Leitura resumida do mes"
             description="Comparacao imediata entre entradas, contas, pendencias e sobra."
           />
-          <div className="mt-6">
+          <div className="mt-5">
             <OverviewBarChart
               entries={totals.entries}
               payables={totals.payables}
