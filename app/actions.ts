@@ -5,7 +5,7 @@ import { AssetType, TransactionCategory, TransactionStatus, TransactionType } fr
 import { z } from "zod";
 
 import { getRequiredCurrentUser } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 const transactionSchema = z.object({
   title: z.string().min(2),
@@ -56,6 +56,7 @@ async function getCurrentUserId() {
 
 export async function createTransaction(formData: FormData) {
   const userId = await getCurrentUserId();
+  const prisma = getPrisma();
 
   const parsed = transactionSchema.parse({
     title: formData.get("title"),
@@ -95,6 +96,7 @@ export async function createTransaction(formData: FormData) {
 
 export async function createInvestment(formData: FormData) {
   const userId = await getCurrentUserId();
+  const prisma = getPrisma();
   const parsed = investmentSchema.parse({
     name: formData.get("name"),
     ticker: formData.get("ticker") || undefined,
@@ -130,6 +132,7 @@ export async function createInvestment(formData: FormData) {
 
 export async function upsertSummary(formData: FormData) {
   const userId = await getCurrentUserId();
+  const prisma = getPrisma();
   const parsed = summarySchema.parse({
     monthReference: formData.get("monthReference"),
     cashBalance: formData.get("cashBalance"),
@@ -166,6 +169,7 @@ export async function upsertSummary(formData: FormData) {
 
 export async function createCreditCard(formData: FormData) {
   const userId = await getCurrentUserId();
+  const prisma = getPrisma();
   const parsed = creditCardSchema.parse({
     name: formData.get("name"),
     brand: formData.get("brand") || undefined,

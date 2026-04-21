@@ -1,6 +1,6 @@
 import { AssetType, Prisma, TransactionCategory, TransactionType } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { monthBounds, toMonthInput } from "@/lib/utils";
 import type { DashboardTotals } from "@/lib/types";
 
@@ -11,6 +11,7 @@ type DashboardDataParams = {
 };
 
 export async function getDashboardData({ userId, month, category = "ALL" }: DashboardDataParams) {
+  const prisma = getPrisma();
   const selectedMonth = month ?? toMonthInput();
   const { start, end } = monthBounds(selectedMonth);
 
