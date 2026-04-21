@@ -27,8 +27,8 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
       user={user}
       selectedMonth={selectedMonth}
       currentPath="/"
-      title="Visao rapida do mes para decidir onde agir primeiro"
-      description="A home agora ficou enxuta: mostra panorama, gargalos e atalhos. O detalhe operacional foi separado em Fechamento e Cartoes."
+      title="Visão rápida do mês para decidir onde agir primeiro"
+      description="A página inicial ficou mais enxuta: mostra panorama, gargalos e atalhos. O detalhe operacional foi separado em Fechamento e Cartões."
     >
       <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-5">
         {cards.map((card) => {
@@ -37,12 +37,12 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
           return (
             <Panel key={card.label} className="rounded-[28px] border-white/10 bg-white/[0.04] p-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-slate-400">{card.label}</p>
+                <p className="text-[13px] text-slate-400">{card.label}</p>
                 <div className={cn("rounded-2xl bg-white/5 p-2.5", card.color)}>
                   <Icon className="h-5 w-5" />
                 </div>
               </div>
-              <p className="mt-5 text-[1.95rem] font-semibold tracking-tight text-white">{formatCurrency(card.value)}</p>
+              <p className="mt-4 text-[1.7rem] font-semibold tracking-tight text-white">{formatCurrency(card.value)}</p>
             </Panel>
           );
         })}
@@ -52,8 +52,8 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
         <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
           <SectionHeading
             eyebrow="Panorama"
-            title="Leitura resumida do mes"
-            description="Comparacao imediata entre entradas, contas, pendencias e sobra."
+            title="Leitura resumida do mês"
+            description="Comparação imediata entre entradas, contas, pendências e sobra."
           />
           <div className="mt-5">
             <OverviewBarChart
@@ -70,28 +70,15 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
           <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
             <SectionHeading
               eyebrow="Prioridade"
-              title="Onde tem mais pressao"
-              description="Resumo do que mais pesa neste mes para voce decidir a proxima acao."
+              title="Onde há mais pressão"
+              description="Resumo do que mais pesa neste mês para você decidir a próxima ação."
             />
             <div className="mt-5 grid gap-3">
               <QuickMetric label="Maior fatura aberta" value={topCard ? `${topCard.creditCard.name} • ${formatCurrency(topCard.invoiceTotal)}` : "Sem fatura aberta"} icon={CreditCard} />
-              <QuickMetric label="Bucket de A pagar mais alto" value={payableBuckets[0] ? `${payableBuckets[0].label} • ${formatCurrency(payableBuckets[0].total)}` : "Sem pendencias"} />
+              <QuickMetric label="Grupo de A pagar mais alto" value={payableBuckets[0] ? `${payableBuckets[0].label} • ${formatCurrency(payableBuckets[0].total)}` : "Sem pendências"} />
               <QuickMetric label="Bucket de A receber mais alto" value={receivableBuckets[0] ? `${receivableBuckets[0].label} • ${formatCurrency(receivableBuckets[0].total)}` : "Sem recebimentos pendentes"} />
               <QuickMetric label="Bucket de Contas mais alto" value={expenseBuckets[0] ? `${expenseBuckets[0].label} • ${formatCurrency(expenseBuckets[0].total)}` : "Sem contas pagas"} />
-              <QuickMetric label="Posicao em investimentos" value={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} />
-            </div>
-          </Panel>
-
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading
-              eyebrow="Fluxo novo"
-              title="Como usar agora"
-              description="Cada area passou a representar uma tarefa real em vez de concentrar tudo numa pagina so."
-            />
-            <div className="mt-5 grid gap-3 text-sm text-slate-300">
-              <GuideRow title="Inicio" text="Leia o mes e veja os maiores gargalos." />
-              <GuideRow title="Fechamento" text="Lance entradas, contas, recebimentos, resumo mensal e investimentos." />
-              <GuideRow title="Cartoes" text="Gerencie compras no cartao, parcelas, atrasados, pagamentos de fatura e cadastro dos cartoes." />
+              <QuickMetric label="Posição em investimentos" value={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} />
             </div>
           </Panel>
         </div>
@@ -107,16 +94,7 @@ function QuickMetric({ label, value, icon: Icon }: { label: string; value: strin
         {Icon ? <Icon className="h-4 w-4 text-accent" /> : null}
         <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</p>
       </div>
-      <p className="mt-2 text-sm font-medium text-white">{value}</p>
-    </div>
-  );
-}
-
-function GuideRow({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <p className="mt-1 text-sm text-slate-300">{text}</p>
+      <p className="mt-2 text-[13px] font-medium text-white">{value}</p>
     </div>
   );
 }

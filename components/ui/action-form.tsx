@@ -85,7 +85,7 @@ export function ActionForm({
         router.refresh();
       } catch (error) {
         pushToast({
-          message: error instanceof Error ? error.message : "Nao foi possivel concluir a acao.",
+          message: error instanceof Error ? error.message : "Não foi possível concluir a ação.",
           tone: "error"
         });
       }

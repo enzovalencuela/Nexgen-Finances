@@ -24,14 +24,14 @@ export function EditableCreditCard({ creditCard }: { creditCard: CreditCard }) {
       <div className="mt-4 border-t border-white/10 pt-4">
         <ActionForm serverAction={updateCreditCard} className="grid gap-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={creditCard.id} />
-          <Input name="name" defaultValue={creditCard.name} placeholder="Nome do cartao" />
+          <Input name="name" defaultValue={creditCard.name} placeholder="Nome do cartão" />
           <div className="grid gap-3 md:grid-cols-2">
             <Input name="brand" defaultValue={creditCard.brand ?? ""} placeholder="Bandeira" />
             <Input name="closingDay" type="number" min="1" max="31" defaultValue={creditCard.closingDay ?? ""} placeholder="Dia de fechamento" />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <Input name="dueDay" type="number" min="1" max="31" defaultValue={creditCard.dueDay ?? ""} placeholder="Dia de vencimento" />
-            <Input name="note" defaultValue={creditCard.note ?? ""} placeholder="Observacao" />
+            <Input name="note" defaultValue={creditCard.note ?? ""} placeholder="Observação" />
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" variant="secondary">
@@ -43,7 +43,7 @@ export function EditableCreditCard({ creditCard }: { creditCard: CreditCard }) {
         <ActionForm serverAction={deleteCreditCard} className="mt-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={creditCard.id} />
           <Button type="submit" variant="ghost" className="px-0 text-rose-300 hover:text-rose-200">
-            Excluir cartao
+            Excluir cartão
           </Button>
         </ActionForm>
       </div>

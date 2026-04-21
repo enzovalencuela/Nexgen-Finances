@@ -139,7 +139,7 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
     revalidateFinanceViews();
     return successResult("Item salvo com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel salvar o item.");
+    return toActionError(error, "Não foi possível salvar o item.");
   }
 }
 
@@ -186,13 +186,13 @@ export async function updateTransaction(formData: FormData): Promise<ActionResul
     });
 
     if (result.count === 0) {
-      return errorResult("Lancamento nao encontrado para edicao.");
+      return errorResult("Lançamento não encontrado para edição.");
     }
 
     revalidateFinanceViews();
     return successResult("Item editado com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel editar o item.");
+    return toActionError(error, "Não foi possível editar o item.");
   }
 }
 
@@ -210,13 +210,13 @@ export async function deleteTransaction(formData: FormData): Promise<ActionResul
     });
 
     if (result.count === 0) {
-      return errorResult("Lancamento nao encontrado para exclusao.");
+      return errorResult("Lançamento não encontrado para exclusão.");
     }
 
     revalidateFinanceViews();
     return successResult("Item excluido com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel excluir o item.");
+    return toActionError(error, "Não foi possível excluir o item.");
   }
 }
 
@@ -257,7 +257,7 @@ export async function createInvestment(formData: FormData): Promise<ActionResult
     revalidateFinanceViews();
     return successResult("Investimento salvo com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel salvar o investimento.");
+    return toActionError(error, "Não foi possível salvar o investimento.");
   }
 }
 
@@ -297,13 +297,13 @@ export async function updateInvestment(formData: FormData): Promise<ActionResult
     });
 
     if (result.count === 0) {
-      return errorResult("Investimento nao encontrado para edicao.");
+      return errorResult("Investimento não encontrado para edição.");
     }
 
     revalidateFinanceViews();
     return successResult("Investimento editado com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel editar o investimento.");
+    return toActionError(error, "Não foi possível editar o investimento.");
   }
 }
 
@@ -321,13 +321,13 @@ export async function deleteInvestment(formData: FormData): Promise<ActionResult
     });
 
     if (result.count === 0) {
-      return errorResult("Investimento nao encontrado para exclusao.");
+      return errorResult("Investimento não encontrado para exclusão.");
     }
 
     revalidateFinanceViews();
     return successResult("Investimento excluido com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel excluir o investimento.");
+    return toActionError(error, "Não foi possível excluir o investimento.");
   }
 }
 
@@ -379,7 +379,7 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
     revalidateFinanceViews();
     return successResult("Fechamento salvo com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel salvar o fechamento.");
+    return toActionError(error, "Não foi possível salvar o fechamento.");
   }
 }
 
@@ -407,9 +407,9 @@ export async function createCreditCard(formData: FormData): Promise<ActionResult
     });
 
     revalidateFinanceViews();
-    return successResult("Cartao salvo com sucesso.");
+    return successResult("Cartão salvo com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel salvar o cartao.");
+    return toActionError(error, "Não foi possível salvar o cartão.");
   }
 }
 
@@ -441,13 +441,13 @@ export async function updateCreditCard(formData: FormData): Promise<ActionResult
     });
 
     if (result.count === 0) {
-      return errorResult("Cartao nao encontrado para edicao.");
+      return errorResult("Cartão não encontrado para edição.");
     }
 
     revalidateFinanceViews();
-    return successResult("Cartao editado com sucesso.");
+    return successResult("Cartão editado com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel editar o cartao.");
+    return toActionError(error, "Não foi possível editar o cartão.");
   }
 }
 
@@ -465,13 +465,13 @@ export async function deleteCreditCard(formData: FormData): Promise<ActionResult
     });
 
     if (result.count === 0) {
-      return errorResult("Cartao nao encontrado para exclusao.");
+      return errorResult("Cartão não encontrado para exclusão.");
     }
 
     revalidateFinanceViews();
-    return successResult("Cartao excluido com sucesso.");
+    return successResult("Cartão excluído com sucesso.");
   } catch (error) {
-    return toActionError(error, "Nao foi possivel excluir o cartao.");
+    return toActionError(error, "Não foi possível excluir o cartão.");
   }
 }
 

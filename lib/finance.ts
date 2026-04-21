@@ -246,8 +246,8 @@ function buildCarryoverEntry({
   return {
     id: `carryover-${userId}-${currentMonthStart.toISOString().slice(0, 7)}`,
     userId,
-    title: "Mes Passado",
-    description: "Entrada automatica baseada na sobra do mes anterior.",
+    title: "Mês Passado",
+    description: "Entrada automática baseada na sobra do mês anterior.",
     type: TransactionType.INCOME,
     category: TransactionCategory.OTHER,
     amount: new Prisma.Decimal(amount),
@@ -303,7 +303,7 @@ function buildGeneratedInstallments({
     generated.push({
       ...origin,
       id: `${origin.id}-generated-${nextInstallment}`,
-      description: `Parcela automatica ${nextInstallment}/${origin.installmentTotal} gerada a partir da compra original.`,
+      description: `Parcela automática ${nextInstallment}/${origin.installmentTotal} gerada a partir da compra original.`,
       transactionDate: installmentDate,
       installmentCurrent: nextInstallment,
       createdAt: installmentDate,
@@ -361,12 +361,12 @@ function buildCardInvoices({
         description: "Compras antigas ainda pendentes e carregadas para esta fatura.",
         total: sumTransactions(overdueItems),
         items: overdueItems,
-        emptyMessage: "Nada em atraso neste cartao."
+        emptyMessage: "Nada em atraso neste cartão."
       },
       {
         key: "current",
-        title: "Compras deste mes",
-        description: "Compras novas desta fatura que ainda estao pendentes.",
+        title: "Compras deste mês",
+        description: "Compras novas desta fatura que ainda estão pendentes.",
         total: sumTransactions(currentItems),
         items: currentItems,
         emptyMessage: "Nenhuma compra nova nesta fatura."
@@ -374,7 +374,7 @@ function buildCardInvoices({
       {
         key: "installments",
         title: "Parcelas",
-        description: "Parcelas que caem neste mes, incluindo as automaticas.",
+        description: "Parcelas que caem neste mês, incluindo as automáticas.",
         total: sumTransactions(installmentItems),
         items: installmentItems,
         emptyMessage: "Nenhuma parcela aberta nesta fatura."
@@ -478,9 +478,9 @@ function buildCardPaymentAdjustments(transactions: TransactionWithCard[]) {
     .map<TransactionWithCard>((transaction) => ({
       ...transaction,
       title: `Abatimento da fatura${transaction.creditCard?.name ? ` - ${transaction.creditCard.name}` : ""}`,
-      description: "Pagamento de fatura abatido automaticamente do total do cartao.",
+      description: "Pagamento de fatura abatido automaticamente do total do cartão.",
       type: TransactionType.BILL,
-      source: "Cartao",
+      source: "Cartão",
       amount: new Prisma.Decimal(-Number(transaction.amount)),
       derivedKind: "cardPayment"
     }));

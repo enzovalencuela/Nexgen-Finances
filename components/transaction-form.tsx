@@ -16,7 +16,7 @@ type FormMode = "general" | "cardPurchase" | "cardPayment";
 const generalEntryKindOptions: Array<{ value: EntryKind; label: string }> = [
   { value: "income_paid", label: "Entrada recebida" },
   { value: "income_pending", label: "Valor a receber" },
-  { value: "expense_paid", label: "Saida paga" },
+  { value: "expense_paid", label: "Saída paga" },
   { value: "bill_pending", label: "Conta a pagar" }
 ];
 
@@ -37,10 +37,10 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
     return (
       <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
         <Input name="title" placeholder="Ex: Mercado, Uber, Amazon" required />
-        <Input name="description" placeholder="Observacao da compra" />
+        <Input name="description" placeholder="Observação da compra" />
         <div className="grid gap-3 md:grid-cols-2">
           <Select name="creditCardId" defaultValue="" required>
-            <option value="">Selecione o cartao</option>
+            <option value="">Selecione o cartão</option>
             {creditCards.map((creditCard) => (
               <option key={creditCard.id} value={creditCard.id}>
                 {creditCard.name}
@@ -58,7 +58,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
 
         <input type="hidden" name="type" value="BILL" />
         <input type="hidden" name="status" value="PENDING" />
-        <input type="hidden" name="source" value="Cartao" />
+        <input type="hidden" name="source" value="Cartão" />
         <input type="hidden" name="isCreditCard" value="on" />
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -88,9 +88,9 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
           </>
         )}
 
-        <p className="text-xs text-slate-400">Toda compra de cartao entra como pendente na fatura. Se ficar sem pagar, ela continua aparecendo nos meses seguintes como atrasada.</p>
+        <p className="text-[11px] text-slate-400">Toda compra de cartão entra como pendente na fatura. Se ficar sem pagar, ela continua aparecendo nos meses seguintes como atrasada.</p>
 
-        <Button type="submit">Salvar compra no cartao</Button>
+        <Button type="submit">Salvar compra no cartão</Button>
       </ActionForm>
     );
   }
@@ -99,10 +99,10 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
     return (
       <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
         <Input name="title" placeholder="Ex: Pagamento Inter Black" required />
-        <Input name="description" placeholder="Observacao do pagamento" />
+        <Input name="description" placeholder="Observação do pagamento" />
 
         <Select name="creditCardId" defaultValue="" required>
-          <option value="">Selecione o cartao</option>
+          <option value="">Selecione o cartão</option>
           {creditCards.map((creditCard) => (
             <option key={creditCard.id} value={creditCard.id}>
               {creditCard.name}
@@ -112,7 +112,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
 
         <input type="hidden" name="type" value="EXPENSE" />
         <input type="hidden" name="status" value="PAID" />
-        <input type="hidden" name="source" value="Cartao" />
+        <input type="hidden" name="source" value="Cartão" />
         <input type="hidden" name="isCreditCard" value="" />
         <input type="hidden" name="installmentCurrent" value="" />
         <input type="hidden" name="installmentTotal" value="" />
@@ -123,7 +123,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
           <Input name="transactionDate" type="date" defaultValue={today} required />
         </div>
 
-        <p className="text-xs text-slate-400">Esse lancamento nao cria uma nova divida. Ele entra como pagamento e abate automaticamente o total aberto da fatura.</p>
+        <p className="text-[11px] text-slate-400">Esse lançamento não cria uma nova dívida. Ele entra como pagamento e abate automaticamente o total aberto da fatura.</p>
 
         <Button type="submit">Salvar pagamento de fatura</Button>
       </ActionForm>
@@ -132,8 +132,8 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
 
   return (
     <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
-      <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Amigo" required />
-      <Input name="description" placeholder="Observacao ou detalhe" />
+      <Input name="title" placeholder="Ex: Salário, Mercado, Canva, Amigo" required />
+      <Input name="description" placeholder="Observação ou detalhe" />
 
       <div className="grid gap-3 md:grid-cols-2">
         <Select value={entryKind} onChange={(event) => setEntryKind(event.target.value as EntryKind)}>
@@ -166,7 +166,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
 
       <Input name="source" placeholder="Grupo: Pai, Nicoli, Contas Nicoli, Outros" />
 
-      <p className="text-xs text-slate-400">O fluxo geral nao mistura cartao. Compras e pagamentos de fatura agora ficam na pagina Cartoes.</p>
+      <p className="text-[11px] text-slate-400">O fluxo geral não mistura cartão. Compras e pagamentos de fatura agora ficam na página Cartões.</p>
 
       <Button type="submit">Salvar item</Button>
     </ActionForm>

@@ -65,7 +65,7 @@ export function BucketList({
 
 export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   if (creditCards.length === 0) {
-    return <p className="text-sm text-slate-300">Nenhum cartao cadastrado ainda.</p>;
+    return <p className="text-[13px] text-slate-300">Nenhum cartão cadastrado ainda.</p>;
   }
 
   return (
@@ -74,9 +74,9 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
         <div key={creditCard.id} className="space-y-2">
           <Link
             href={`/cartoes/${creditCard.id}`}
-            className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-sm text-accent transition hover:bg-accent/10"
+            className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-[13px] text-accent transition hover:bg-accent/10"
           >
-            Abrir pagina do cartao
+            Abrir página do cartão
           </Link>
           <EditableCreditCard creditCard={creditCard} />
         </div>
@@ -87,7 +87,7 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
 
 export function InvestmentList({ investments }: { investments: Investment[] }) {
   if (investments.length === 0) {
-    return <p className="text-sm text-slate-300">Nenhum ativo registrado neste periodo.</p>;
+    return <p className="text-[13px] text-slate-300">Nenhum ativo registrado neste período.</p>;
   }
 
   return (

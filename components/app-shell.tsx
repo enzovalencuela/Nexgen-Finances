@@ -19,9 +19,9 @@ type Props = {
 };
 
 const navItems = [
-  { href: "/" as const, label: "Inicio", icon: LayoutGrid },
+  { href: "/" as const, label: "Início", icon: LayoutGrid },
   { href: "/fechamento" as const, label: "Fechamento", icon: NotebookTabs },
-  { href: "/cartoes" as const, label: "Cartoes", icon: CreditCard }
+  { href: "/cartoes" as const, label: "Cartões", icon: CreditCard }
 ];
 
 export function AppShell({ user, selectedMonth, currentPath, title, description, children }: Props) {
@@ -37,7 +37,7 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
-                  <p className="mt-1 text-sm text-slate-400">Fechamento mensal com espacos dedicados para cada tarefa</p>
+                  <p className="mt-1 text-[13px] text-slate-400">Fechamento mensal com espaços dedicados para cada tarefa</p>
                 </div>
               </div>
 
@@ -46,8 +46,8 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
                   <CalendarDays className="h-4 w-4 text-accent" />
                   {formatMonthLabel(selectedMonth)}
                 </div>
-                <h1 className="max-w-4xl text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl xl:text-[3.05rem]">{title}</h1>
-                <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-[1.02rem]">{description}</p>
+                <h1 className="max-w-4xl text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-[2.1rem] xl:text-[2.55rem]">{title}</h1>
+                <p className="max-w-3xl text-[13px] leading-6 text-slate-300 sm:text-[14px]">{description}</p>
               </div>
 
               <nav className="flex flex-wrap gap-3">
@@ -60,7 +60,7 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
                       key={item.href}
                       href={buildMonthHref(item.href, selectedMonth)}
                       className={cn(
-                        "inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-medium transition",
+                        "inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-[13px] font-medium transition",
                         isActive
                           ? "border-accent/30 bg-accent/15 text-white"
                           : "border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white"
@@ -76,18 +76,18 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
 
             <div className="grid gap-4">
               <Panel className="rounded-[30px] border-white/10 bg-white/[0.04] p-5">
-                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Navegacao do mes</p>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Navegação do mês</p>
                 <div className="mt-4 space-y-4">
                   <form action={currentPath} className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
                     <Input type="month" name="month" defaultValue={selectedMonth} className="min-w-40 bg-transparent" />
                     <Button type="submit" variant="secondary">
-                      Abrir mes
+                      Abrir mês
                     </Button>
                   </form>
 
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
-                    <p className="text-sm font-medium text-white">{user.name || "Usuario"}</p>
-                    <p className="mt-1 text-sm text-slate-400">{user.email}</p>
+                    <p className="text-[13px] font-medium text-white">{user.name || "Usuário"}</p>
+                    <p className="mt-1 text-[13px] text-slate-400">{user.email}</p>
                   </div>
 
                   <SignOutButton />

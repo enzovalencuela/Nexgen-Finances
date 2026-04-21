@@ -26,7 +26,7 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
           <div className="text-right">
             <p className="font-semibold text-white">{formatCurrency(Number(investment.amountBRL))}</p>
             <p className="text-xs text-slate-300">
-              {investment.amountUSD ? formatCurrency(Number(investment.amountUSD), "USD") : "Sem USD"}
+              {investment.amountUSD ? formatCurrency(Number(investment.amountUSD), "USD") : "Sem valor em USD"}
             </p>
           </div>
         </div>
@@ -47,14 +47,14 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
                 </option>
               ))}
             </Select>
-            <Input name="institution" defaultValue={investment.institution ?? ""} placeholder="Instituicao" />
+            <Input name="institution" defaultValue={investment.institution ?? ""} placeholder="Instituição" />
             <Input name="amountBRL" type="number" step="0.01" defaultValue={Number(investment.amountBRL)} />
             <Input name="amountUSD" type="number" step="0.01" defaultValue={investment.amountUSD ? Number(investment.amountUSD) : ""} placeholder="USD" />
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <Input name="quantity" type="number" step="0.0001" defaultValue={investment.quantity ? Number(investment.quantity) : ""} placeholder="Quantidade" />
             <Input name="referenceDate" type="date" defaultValue={defaultDate} />
-            <Input name="notes" defaultValue={investment.notes ?? ""} placeholder="Observacoes" />
+            <Input name="notes" defaultValue={investment.notes ?? ""} placeholder="Observações" />
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" variant="secondary">

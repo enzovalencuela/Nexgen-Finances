@@ -2,21 +2,21 @@ import { AssetType, TransactionCategory, TransactionStatus, TransactionType } fr
 
 export const transactionTypeLabels: Record<TransactionType, string> = {
   INCOME: "Entrada",
-  EXPENSE: "Saida",
+  EXPENSE: "Saída",
   INVESTMENT: "Investimento",
   BILL: "Contas a pagar"
 };
 
 export const transactionCategoryLabels: Record<TransactionCategory, string> = {
-  NECESSARY: "Necessario",
+  NECESSARY: "Necessário",
   LEISURE: "Lazer",
   INVESTMENT: "Investimentos",
   HOUSING: "Moradia",
   TRANSPORT: "Transporte",
-  FOOD: "Alimentacao",
-  HEALTH: "Saude",
-  EDUCATION: "Educacao",
-  UTILITIES: "Servicos",
+  FOOD: "Alimentação",
+  HEALTH: "Saúde",
+  EDUCATION: "Educação",
+  UTILITIES: "Serviços",
   OTHER: "Outros"
 };
 
@@ -31,6 +31,6 @@ export const assetTypeLabels: Record<AssetType, string> = {
   FUND: "Fundo",
   CRYPTO: "Cripto",
   ETF: "ETF",
-  STOCK: "Acao",
+  STOCK: "Ação",
   OTHER: "Outro"
 };

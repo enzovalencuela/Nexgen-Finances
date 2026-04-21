@@ -15,10 +15,10 @@ export function CreditCardForm() {
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="dueDay" type="number" min="1" max="31" placeholder="Dia de vencimento" />
-        <Input name="note" placeholder="Observacao" />
+        <Input name="note" placeholder="Observação" />
       </div>
       <Button type="submit" variant="secondary">
-        Adicionar cartao
+        Adicionar cartão
       </Button>
     </ActionForm>
   );
@@ -30,7 +30,7 @@ export function InvestmentForm() {
   return (
     <ActionForm serverAction={createInvestment} className="grid gap-3" resetOnSuccess>
       <div className="grid gap-3 md:grid-cols-2">
-        <Input name="name" placeholder="Ex: CDB Liquidez Diaria" required />
+        <Input name="name" placeholder="Ex: CDB Liquidez Diária" required />
         <Input name="ticker" placeholder="Ticker" />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
@@ -41,14 +41,14 @@ export function InvestmentForm() {
             </option>
           ))}
         </Select>
-        <Input name="institution" placeholder="Instituicao" />
+        <Input name="institution" placeholder="Instituição" />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="quantity" type="number" step="0.0001" placeholder="Quantidade" />
         <Input name="amountBRL" type="number" step="0.01" placeholder="Valor em BRL" required />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <Input name="usdRate" type="number" step="0.0001" placeholder="Cotacao USD" />
+        <Input name="usdRate" type="number" step="0.0001" placeholder="Cotação do USD" />
         <Input name="referenceDate" type="date" defaultValue={today} required />
       </div>
       <Input name="notes" placeholder="Observacoes" />
@@ -80,7 +80,7 @@ export function SummaryForm({
         <Input name="digitalBalance" type="number" step="0.01" placeholder="Sobra digital" defaultValue={summary?.digitalBalance ?? 0} required />
       </div>
       <Input name="investmentWithdrawn" type="number" step="0.01" placeholder="Retirado dos investimentos" defaultValue={summaryMeta.investmentWithdrawn} />
-      <Input name="noteText" placeholder="Observacao" defaultValue={summaryMeta.noteText} />
+      <Input name="noteText" placeholder="Observação" defaultValue={summaryMeta.noteText} />
       <Button type="submit" variant="secondary">
         Salvar fechamento
       </Button>

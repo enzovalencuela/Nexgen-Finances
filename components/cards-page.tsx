@@ -24,15 +24,15 @@ export function CardsPage({ user, selectedMonth, creditCards, cardInvoices }: Pr
       user={user}
       selectedMonth={selectedMonth}
       currentPath="/cartoes"
-      title="Cartoes e faturas agora ficam em um espaco proprio, com leitura mais limpa"
-      description="Aqui voce trabalha so com cartao: compras, parcelas, atrasados, pagamentos de fatura e cadastro dos cartoes. O objetivo foi tirar ambiguidade do fechamento mensal."
+      title="Cartões e faturas agora ficam em um espaço próprio, com leitura mais limpa"
+      description="Aqui você trabalha só com cartão: compras, parcelas, atrasados, pagamentos de fatura e cadastro dos cartões. O objetivo foi tirar a ambiguidade do fechamento mensal."
     >
       <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="space-y-6">
           <section className="grid gap-4 md:grid-cols-3">
             <CardMetric label="Fatura aberta total" value={formatCurrency(openInvoices.reduce((sum, invoice) => sum + invoice.invoiceTotal, 0))} icon={ReceiptText} tone="neutral" />
             <CardMetric label="Em atraso" value={formatCurrency(overdueTotal)} icon={AlertTriangle} tone="warning" />
-            <CardMetric label="Cartoes com movimento" value={`${openInvoices.length}`} icon={CreditCard} tone="neutral" />
+            <CardMetric label="Cartões com movimento" value={`${openInvoices.length}`} icon={CreditCard} tone="neutral" />
           </section>
 
           <div className="space-y-6">
@@ -42,21 +42,21 @@ export function CardsPage({ user, selectedMonth, creditCards, cardInvoices }: Pr
 
         <div className="space-y-6">
           <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Nova compra" title="Lancamento no cartao" description="Use apenas para compras no cartao. Se for parcelado, marque as parcelas aqui mesmo." />
+            <SectionHeading eyebrow="Nova compra" title="Lançamento no cartão" description="Use apenas para compras no cartão. Se for parcelado, marque as parcelas aqui mesmo." />
             <div className="mt-5">
               <TransactionForm creditCards={creditCards} mode="cardPurchase" />
             </div>
           </Panel>
 
           <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Pagamento" title="Registrar pagamento de fatura" description="Use este formulario apenas para pagar fatura. O valor eh abatido automaticamente da fatura do cartao." />
+            <SectionHeading eyebrow="Pagamento" title="Registrar pagamento de fatura" description="Use este formulário apenas para pagar a fatura. O valor é abatido automaticamente do total do cartão." />
             <div className="mt-5">
               <TransactionForm creditCards={creditCards} mode="cardPayment" />
             </div>
           </Panel>
 
           <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Cadastro" title="Cartoes" description="Nome, bandeira, fechamento e vencimento ficam centralizados aqui." />
+            <SectionHeading eyebrow="Cadastro" title="Cartões" description="Nome, bandeira, fechamento e vencimento ficam centralizados aqui." />
             <div className="mt-5 space-y-4">
               <CreditCardForm />
               <CreditCardList creditCards={creditCards} />
@@ -73,15 +73,15 @@ function InvoiceCard({ invoice, creditCards }: { invoice: CardInvoiceView; credi
     <section className="rounded-[34px] border border-white/10 bg-[#0a1220] p-6 shadow-glow">
       <div className="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.34em] text-accent/80">Fatura</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">{invoice.creditCard.name}</h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-accent/80">Fatura</p>
+          <h2 className="mt-2 text-xl font-semibold text-white">{invoice.creditCard.name}</h2>
+          <p className="mt-2 text-[13px] text-slate-300">
             Fecha dia {invoice.creditCard.closingDay ?? "-"} • vence dia {invoice.creditCard.dueDay ?? "-"}
             {invoice.creditCard.note ? ` • ${invoice.creditCard.note}` : ""}
           </p>
           <div className="mt-4">
-            <Link href={`/cartoes/${invoice.creditCard.id}?month=${invoice.monthReference}`} className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-sm text-accent transition hover:bg-accent/10">
-              Abrir timeline deste cartao
+            <Link href={`/cartoes/${invoice.creditCard.id}?month=${invoice.monthReference}`} className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-[13px] text-accent transition hover:bg-accent/10">
+              Abrir linha do tempo deste cartão
             </Link>
           </div>
         </div>
@@ -99,10 +99,10 @@ function InvoiceCard({ invoice, creditCards }: { invoice: CardInvoiceView; credi
           <div key={section.key} className="rounded-[26px] border border-white/10 bg-white/[0.03] p-4">
             <div className="mb-4 flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-white">{section.title}</h3>
-                <p className="text-sm text-slate-400">{section.description}</p>
+                <h3 className="text-base font-semibold text-white">{section.title}</h3>
+                <p className="text-[13px] text-slate-400">{section.description}</p>
               </div>
-              <p className={cn("text-lg font-semibold", section.key === "overdue" ? "text-amber-200" : "text-white")}>{formatCurrency(section.total)}</p>
+              <p className={cn("text-base font-semibold", section.key === "overdue" ? "text-amber-200" : "text-white")}>{formatCurrency(section.total)}</p>
             </div>
 
             <TransactionList
@@ -123,10 +123,10 @@ function CardMetric({ label, value, icon: Icon, tone }: { label: string; value: 
   return (
     <Panel className={cn("rounded-[28px] border-white/10 p-5", tone === "warning" ? "bg-amber-500/10" : "bg-white/[0.04]")}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-400">{label}</p>
+        <p className="text-[13px] text-slate-400">{label}</p>
         <Icon className={cn("h-5 w-5", tone === "warning" ? "text-amber-200" : "text-accent")} />
       </div>
-      <p className="mt-5 text-[1.95rem] font-semibold tracking-tight text-white">{value}</p>
+      <p className="mt-4 text-[1.7rem] font-semibold tracking-tight text-white">{value}</p>
     </Panel>
   );
 }
@@ -143,7 +143,7 @@ function InvoiceStat({ label, value, strong, warning }: { label: string; value: 
 function EmptyCardState() {
   return (
     <Panel className="rounded-[34px] border-white/10 bg-[#0a1220] p-6">
-      <SectionHeading eyebrow="Sem movimento" title="Nenhuma fatura encontrada neste mes" description="Cadastre um cartao ou registre uma compra/pagamento para começar a organizar as faturas por cartao." />
+      <SectionHeading eyebrow="Sem movimento" title="Nenhuma fatura encontrada neste mês" description="Cadastre um cartão ou registre uma compra ou pagamento para começar a organizar as faturas por cartão." />
     </Panel>
   );
 }

@@ -32,7 +32,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
             <div className="flex items-center gap-2">
               <p className="font-medium text-white">{transaction.title}</p>
               <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                {isCarryover ? "Automatico" : "Parcela automatica"}
+                {isCarryover ? "Automático" : "Parcela automática"}
               </span>
             </div>
             <p className="text-sm text-slate-300">
@@ -45,7 +45,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
 
           <div className="text-right">
             <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
-            <p className={`text-xs font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automatica" : "Cobranca futura automatica"}</p>
+            <p className={`text-[11px] font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automática" : "Cobrança futura automática"}</p>
           </div>
         </div>
       </div>
@@ -65,14 +65,14 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
                 </span>
               ) : null}
             </div>
-            <p className="text-sm text-slate-300">
+            <p className="text-[13px] text-slate-300">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
               {transaction.isCreditCard && transaction.installmentCurrent && transaction.installmentTotal
                 ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
                 : ""}
             </p>
-            {isOverdueCardBill ? <p className="mt-2 text-xs text-amber-100">Pendente de mes anterior. Continua somando na fatura atual ate marcar como pago.</p> : null}
+            {isOverdueCardBill ? <p className="mt-2 text-[11px] text-amber-100">Pendente do mês anterior. Continua somando na fatura atual até ser marcado como pago.</p> : null}
           </div>
 
           <div className="text-right">
@@ -89,7 +89,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
             <Input name="title" defaultValue={transaction.title} />
             <Input name="source" defaultValue={transaction.source ?? ""} placeholder="Grupo" />
           </div>
-          <Input name="description" defaultValue={transaction.description ?? ""} placeholder="Descricao" />
+          <Input name="description" defaultValue={transaction.description ?? ""} placeholder="Descrição" />
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Select name="type" defaultValue={transaction.type}>
               {Object.entries(transactionTypeLabels).map(([value, label]) => (
@@ -117,7 +117,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Input name="transactionDate" type="date" defaultValue={defaultDate} />
             <Select name="creditCardId" defaultValue={transaction.creditCardId ?? ""}>
-              <option value="">Sem cartao</option>
+              <option value="">Sem cartão</option>
               {creditCards.map((creditCard) => (
                 <option key={creditCard.id} value={creditCard.id}>
                   {creditCard.name}
@@ -129,7 +129,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           </div>
           <label className="flex items-center gap-3 text-sm text-slate-200">
             <input type="checkbox" name="isCreditCard" defaultChecked={transaction.isCreditCard} className="h-4 w-4 rounded" />
-            Movimento no cartao
+            Movimento no cartão
           </label>
 
           <div className="flex flex-wrap gap-3">

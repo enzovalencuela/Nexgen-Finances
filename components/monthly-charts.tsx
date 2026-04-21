@@ -41,9 +41,9 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
     <div className="min-w-44 rounded-2xl border border-white/15 bg-slate-950/95 px-4 py-3 shadow-2xl backdrop-blur-sm">
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-        <p className="text-sm font-semibold text-white">{label}</p>
+        <p className="text-[13px] font-semibold text-white">{label}</p>
       </div>
-      <p className="mt-2 text-sm text-slate-200">Valor: {formatCurrency(value)}</p>
+      <p className="mt-2 text-[13px] text-slate-200">Valor: {formatCurrency(value)}</p>
     </div>
   );
 }
@@ -77,14 +77,14 @@ export function OverviewBarChart(props: OverviewChartProps) {
 
 export function ClassificationPieChart(props: ClassificationChartProps) {
   const data = [
-    { name: "Necessarios", value: props.necessary },
-    { name: "Nao tao necessarios", value: props.optional },
+    { name: "Necessários", value: props.necessary },
+    { name: "Menos necessários", value: props.optional },
     { name: "Lazer", value: props.leisure },
     { name: "Investimentos", value: props.investment }
   ].filter((item) => item.value > 0);
 
   if (data.length === 0) {
-    return <div className="flex h-72 items-center justify-center text-sm text-slate-400">Sem gastos classificados neste mes.</div>;
+    return <div className="flex h-72 items-center justify-center text-[13px] text-slate-400">Sem gastos classificados neste mês.</div>;
   }
 
   return (
@@ -110,9 +110,9 @@ export function ClassificationPieChart(props: ClassificationChartProps) {
           <div key={entry.name} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
             <div className="flex items-center gap-3">
               <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: classificationColors[index] }} />
-              <span className="text-sm text-white">{entry.name}</span>
+              <span className="text-[13px] text-white">{entry.name}</span>
             </div>
-            <span className="text-sm font-semibold text-white">{formatCurrency(entry.value)}</span>
+            <span className="text-[13px] font-semibold text-white">{formatCurrency(entry.value)}</span>
           </div>
         ))}
       </div>
