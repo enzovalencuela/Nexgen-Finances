@@ -109,19 +109,21 @@ export function DashboardShell({
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
                 {heroCards.map((card) => {
                   const Icon = card.icon;
                   const value = totals[card.key];
 
                   return (
-                    <div key={card.key} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                    <div key={card.key} className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
                       <div className="flex items-start justify-between gap-4">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm text-slate-400">{card.label}</p>
-                          <p className="mt-4 text-3xl font-semibold text-white">{formatCurrency(value)}</p>
+                          <p className="mt-4 text-[clamp(2rem,3vw,3rem)] font-semibold leading-none tracking-tight text-white">
+                            {formatCurrency(value)}
+                          </p>
                         </div>
-                        <div className={cn("rounded-2xl bg-white/5 p-3", card.color)}>
+                        <div className={cn("shrink-0 self-start rounded-2xl bg-white/5 p-3", card.color)}>
                           <Icon className="h-5 w-5" />
                         </div>
                       </div>
