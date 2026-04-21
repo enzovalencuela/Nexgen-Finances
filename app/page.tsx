@@ -7,6 +7,8 @@ import { getDashboardData } from "@/lib/finance";
 import { prisma } from "@/lib/prisma";
 import { toMonthInput } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 type PageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
