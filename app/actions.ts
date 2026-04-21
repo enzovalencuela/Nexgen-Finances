@@ -54,6 +54,10 @@ const creditCardSchema = z.object({
   note: z.string().optional()
 });
 
+const creditCardUpdateSchema = creditCardSchema.extend({
+  id: z.string().min(1)
+});
+
 const transactionUpdateSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(2),
@@ -400,6 +404,68 @@ export async function createCreditCard(formData: FormData): Promise<ActionResult
     return successResult("Cartao salvo com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel salvar o cartao.");
+  }
+}
+
+export async function updateCreditCard(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const parsed = creditCardUpdateSchema.parse({
+      id: formData.get("id"),
+      name: formData.get("name"),
+      brand: formData.get("brand") || undefined,
+      closingDay: formData.get("closingDay") || undefined,
+      dueDay: formData.get("dueDay") || undefined,
+      note: formData.get("note") || undefined
+    });
+
+    const result = await prisma.creditCard.updateMany({
+      where: {
+        id: parsed.id,
+        userId
+      },
+      data: {
+        name: parsed.name,
+        brand: parsed.brand,
+        closingDay: parsed.closingDay,
+        dueDay: parsed.dueDay,
+        note: parsed.note
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Cartao nao encontrado para edicao.");
+    }
+
+    revalidatePath("/");
+    return successResult("Cartao editado com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel editar o cartao.");
+  }
+}
+
+export async function deleteCreditCard(formData: FormData): Promise<ActionResult> {
+  try {
+    const userId = await getCurrentUserId();
+    const prisma = getPrisma();
+    const id = z.string().min(1).parse(formData.get("id"));
+
+    const result = await prisma.creditCard.deleteMany({
+      where: {
+        id,
+        userId
+      }
+    });
+
+    if (result.count === 0) {
+      return errorResult("Cartao nao encontrado para exclusao.");
+    }
+
+    revalidatePath("/");
+    return successResult("Cartao excluido com sucesso.");
+  } catch (error) {
+    return toActionError(error, "Nao foi possivel excluir o cartao.");
   }
 }
 

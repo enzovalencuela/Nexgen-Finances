@@ -27,6 +27,8 @@ type InvestmentSnapshot = {
   updatedAt: Date;
 };
 
+type InstallmentOrigin = TransactionWithCard;
+
 export async function getDashboardData({ userId, month }: DashboardDataParams): Promise<MonthlyStatementData> {
   const prisma = getPrisma();
   const selectedMonth = month ?? toMonthInput();
@@ -42,7 +44,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investmentHistory, summary, creditCards, previousSummary] = await Promise.all([
+  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -82,12 +84,52 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
           lte: previousMonthBounds.end
         }
       }
+    }),
+    prisma.summary.findFirst({
+      where: {
+        userId,
+        monthReference: {
+          lt: start
+        }
+      },
+      orderBy: {
+        monthReference: "desc"
+      }
+    }),
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        type: TransactionType.BILL,
+        isCreditCard: true,
+        installmentCurrent: {
+          not: null
+        },
+        installmentTotal: {
+          not: null
+        },
+        transactionDate: {
+          lt: start
+        }
+      },
+      include: {
+        creditCard: true
+      },
+      orderBy: {
+        transactionDate: "desc"
+      }
     })
   ]);
 
   const typedTransactions = transactions as TransactionWithCard[];
+  const generatedInstallments = buildGeneratedInstallments({
+    selectedMonthStart: start,
+    currentMonthTransactions: typedTransactions,
+    installmentOrigins: installmentOrigins as InstallmentOrigin[]
+  });
+  const monthTransactions = sortTransactionsByDateDesc([...typedTransactions, ...generatedInstallments]);
   const investments = collapseInvestmentHistory(investmentHistory);
-  const summaryMeta = parseSummaryMeta(summary?.note);
+  const effectiveSummary = summary ?? previousFilledSummary;
+  const summaryMeta = parseSummaryMeta(effectiveSummary?.note);
 
   const persistedEntries = typedTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID
@@ -99,11 +141,11 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     persistedEntries
   });
   const entries = sortTransactionsByDateDesc(carryoverEntry ? [...persistedEntries, carryoverEntry] : persistedEntries);
-  const payables = typedTransactions.filter((transaction) => transaction.type === TransactionType.BILL);
-  const receivables = typedTransactions.filter(
+  const payables = monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL);
+  const receivables = monthTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING
   );
-  const expenses = typedTransactions.filter(
+  const expenses = monthTransactions.filter(
     (transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID
   );
 
@@ -115,7 +157,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
 
   const summaryLeftover = Number(summary?.cashBalance ?? 0) + Number(summary?.digitalBalance ?? 0);
 
-  const totals = transactions.reduce<DashboardTotals>(
+  const totals = monthTransactions.reduce<DashboardTotals>(
     (acc, transaction) => {
       const amount = Number(transaction.amount);
 
@@ -161,7 +203,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     expenseBuckets,
     classificationTotals,
     investments,
-    summary,
+    summary: effectiveSummary,
     summaryMeta,
     creditCards,
     investmentOverview
@@ -207,8 +249,59 @@ function buildCarryoverEntry({
     creditCard: null,
     createdAt: currentMonthStart,
     updatedAt: currentMonthStart,
-    isDerived: true
+    isDerived: true,
+    derivedKind: "carryover"
   };
+}
+
+function buildGeneratedInstallments({
+  selectedMonthStart,
+  currentMonthTransactions,
+  installmentOrigins
+}: {
+  selectedMonthStart: Date;
+  currentMonthTransactions: TransactionWithCard[];
+  installmentOrigins: InstallmentOrigin[];
+}): TransactionWithCard[] {
+  const generated: TransactionWithCard[] = [];
+
+  for (const origin of installmentOrigins) {
+    if (!origin.installmentCurrent || !origin.installmentTotal) {
+      continue;
+    }
+
+    const monthOffset = diffInMonths(startOfMonth(origin.transactionDate), selectedMonthStart);
+
+    if (monthOffset <= 0) {
+      continue;
+    }
+
+    const nextInstallment = origin.installmentCurrent + monthOffset;
+
+    if (nextInstallment > origin.installmentTotal) {
+      continue;
+    }
+
+    if (hasMatchingPersistedInstallment(currentMonthTransactions, origin, nextInstallment)) {
+      continue;
+    }
+
+    const installmentDate = addMonthsKeepingDay(origin.transactionDate, monthOffset);
+
+    generated.push({
+      ...origin,
+      id: `${origin.id}-generated-${nextInstallment}`,
+      description: `Parcela automatica ${nextInstallment}/${origin.installmentTotal} gerada a partir da compra original.`,
+      transactionDate: installmentDate,
+      installmentCurrent: nextInstallment,
+      createdAt: installmentDate,
+      updatedAt: installmentDate,
+      isDerived: true,
+      derivedKind: "installment"
+    });
+  }
+
+  return generated;
 }
 
 function hasCarryoverEntry(entries: TransactionWithCard[]) {
@@ -238,6 +331,48 @@ function sortTransactionsByDateDesc(transactions: TransactionWithCard[]) {
 
     return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
   });
+}
+
+function hasMatchingPersistedInstallment(transactions: TransactionWithCard[], origin: InstallmentOrigin, installmentCurrent: number) {
+  return transactions.some((transaction) => {
+    return (
+      transaction.type === TransactionType.BILL &&
+      transaction.isCreditCard &&
+      transaction.installmentCurrent === installmentCurrent &&
+      transaction.installmentTotal === origin.installmentTotal &&
+      Number(transaction.amount) === Number(origin.amount) &&
+      transaction.creditCardId === origin.creditCardId &&
+      normalizeText(transaction.title) === normalizeText(origin.title) &&
+      normalizeText(transaction.source) === normalizeText(origin.source)
+    );
+  });
+}
+
+function startOfMonth(date: Date | string) {
+  const normalized = new Date(date);
+  return new Date(normalized.getFullYear(), normalized.getMonth(), 1);
+}
+
+function diffInMonths(left: Date, right: Date) {
+  return (right.getFullYear() - left.getFullYear()) * 12 + (right.getMonth() - left.getMonth());
+}
+
+function addMonthsKeepingDay(date: Date | string, monthsToAdd: number) {
+  const source = new Date(date);
+  const targetYear = source.getFullYear();
+  const targetMonthIndex = source.getMonth() + monthsToAdd;
+  const lastDayOfTargetMonth = new Date(targetYear, targetMonthIndex + 1, 0).getDate();
+  const targetDay = Math.min(source.getDate(), lastDayOfTargetMonth);
+
+  return new Date(
+    source.getFullYear(),
+    source.getMonth() + monthsToAdd,
+    targetDay,
+    source.getHours(),
+    source.getMinutes(),
+    source.getSeconds(),
+    source.getMilliseconds()
+  );
 }
 
 function collapseInvestmentHistory(investments: InvestmentSnapshot[]) {

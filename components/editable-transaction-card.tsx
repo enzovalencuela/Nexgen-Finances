@@ -20,6 +20,8 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
   const defaultDate = new Date(transaction.transactionDate).toISOString().slice(0, 10);
 
   if (transaction.isDerived) {
+    const isCarryover = transaction.derivedKind === "carryover";
+
     return (
       <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/5 p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -27,19 +29,22 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
             <div className="flex items-center gap-2">
               <p className="font-medium text-white">{transaction.title}</p>
               <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                Automatico
+                {isCarryover ? "Automatico" : "Parcela automatica"}
               </span>
             </div>
             <p className="text-sm text-slate-300">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
+              {!isCarryover && transaction.installmentCurrent && transaction.installmentTotal
+                ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
+                : ""}
             </p>
             <p className="mt-2 text-xs text-slate-400">{transaction.description}</p>
           </div>
 
           <div className="text-right">
             <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
-            <p className={`text-xs font-medium ${accentClass}`}>Entrada inicial automatica</p>
+            <p className={`text-xs font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automatica" : "Cobranca futura automatica"}</p>
           </div>
         </div>
       </div>

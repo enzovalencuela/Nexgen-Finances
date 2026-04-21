@@ -7,6 +7,7 @@ import { assetTypeLabels, transactionCategoryLabels, transactionStatusLabels, tr
 import type { MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { EditableInvestmentCard } from "@/components/editable-investment-card";
+import { EditableCreditCard } from "@/components/editable-credit-card";
 import { EditableTransactionCard } from "@/components/editable-transaction-card";
 import { ClassificationPieChart, OverviewBarChart } from "@/components/monthly-charts";
 import { ActionForm } from "@/components/ui/action-form";
@@ -586,17 +587,7 @@ function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   return (
     <div className="grid gap-3">
       {creditCards.map((creditCard) => (
-        <div key={creditCard.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="font-medium text-white">{creditCard.name}</p>
-              <p className="text-sm text-slate-300">{creditCard.brand ?? "Sem bandeira"}</p>
-            </div>
-            <p className="text-sm text-slate-300">
-              Fecha dia {creditCard.closingDay ?? "-"} • vence dia {creditCard.dueDay ?? "-"}
-            </p>
-          </div>
-        </div>
+        <EditableCreditCard key={creditCard.id} creditCard={creditCard} />
       ))}
     </div>
   );
