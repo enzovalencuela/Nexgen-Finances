@@ -1,6 +1,4 @@
 import { redirect } from "next/navigation";
-import { TransactionCategory } from "@prisma/client";
-
 import { DashboardShell } from "@/components/dashboard-shell";
 import { auth } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/current-user";
@@ -28,12 +26,10 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   const params = searchParams ?? {};
   const month = typeof params.month === "string" ? params.month : toMonthInput();
-  const category = typeof params.category === "string" ? params.category : "ALL";
 
   const dashboardData = await getDashboardData({
     userId: user.id,
-    month,
-    category: category === "ALL" ? "ALL" : (category as TransactionCategory)
+    month
   });
 
   return <DashboardShell user={user} {...dashboardData} />;

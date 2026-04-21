@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { getRequiredCurrentUser } from "@/lib/current-user";
 import { getPrisma } from "@/lib/prisma";
+import { stringifySummaryMeta } from "@/lib/summary-meta";
 
 const transactionSchema = z.object({
   title: z.string().min(2),
@@ -38,7 +39,10 @@ const summarySchema = z.object({
   monthReference: z.string().min(1),
   cashBalance: z.coerce.number(),
   digitalBalance: z.coerce.number(),
-  note: z.string().optional()
+  salaryBase: z.coerce.number().min(0).optional(),
+  purchaseEstimate: z.coerce.number().min(0).optional(),
+  investmentWithdrawn: z.coerce.number().min(0).optional(),
+  noteText: z.string().optional()
 });
 
 const creditCardSchema = z.object({
@@ -137,7 +141,17 @@ export async function upsertSummary(formData: FormData) {
     monthReference: formData.get("monthReference"),
     cashBalance: formData.get("cashBalance"),
     digitalBalance: formData.get("digitalBalance"),
-    note: formData.get("note") || undefined
+    salaryBase: formData.get("salaryBase") || undefined,
+    purchaseEstimate: formData.get("purchaseEstimate") || undefined,
+    investmentWithdrawn: formData.get("investmentWithdrawn") || undefined,
+    noteText: formData.get("noteText") || undefined
+  });
+
+  const note = stringifySummaryMeta({
+    salaryBase: parsed.salaryBase,
+    purchaseEstimate: parsed.purchaseEstimate,
+    investmentWithdrawn: parsed.investmentWithdrawn,
+    noteText: parsed.noteText
   });
 
   const [year, month] = parsed.monthReference.split("-").map(Number);
@@ -153,14 +167,14 @@ export async function upsertSummary(formData: FormData) {
     update: {
       cashBalance: parsed.cashBalance,
       digitalBalance: parsed.digitalBalance,
-      note: parsed.note
+      note
     },
     create: {
       userId,
       monthReference,
       cashBalance: parsed.cashBalance,
       digitalBalance: parsed.digitalBalance,
-      note: parsed.note
+      note
     }
   });
 

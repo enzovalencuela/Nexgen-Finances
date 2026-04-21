@@ -1,10 +1,10 @@
-import { ArrowDownCircle, ArrowUpCircle, Landmark, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, BadgeDollarSign, Landmark, PiggyBank, Wallet } from "lucide-react";
 import Image from "next/image";
-import { TransactionCategory, type CreditCard, type Investment, type Summary, type Transaction, type User } from "@prisma/client";
+import type { CreditCard, Investment, Summary, User } from "@prisma/client";
 
 import { createCreditCard, createInvestment, createTransaction, upsertSummary } from "@/app/actions";
 import { assetTypeLabels, transactionCategoryLabels, transactionStatusLabels, transactionTypeLabels } from "@/lib/constants";
-import type { DashboardTotals } from "@/lib/types";
+import type { MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,67 +13,39 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Select } from "@/components/ui/select";
 import { SignOutButton } from "@/components/sign-out-button";
 
-type Props = {
+type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
-  selectedMonth: string;
-  selectedCategory: TransactionCategory | "ALL";
-  totals: DashboardTotals;
-  transactions: Array<Transaction & { creditCard: CreditCard | null }>;
-  investments: Investment[];
-  summary: Summary | null;
-  creditCards: CreditCard[];
-  investmentOverview: {
-    totalBRL: number;
-    totalUSD: number;
-    byType: Partial<Record<Investment["assetType"], number>>;
-  };
 };
 
-const statCards = [
-  {
-    label: "Total Recebido",
-    key: "totalReceived",
-    icon: ArrowUpCircle,
-    color: "text-accent"
-  },
-  {
-    label: "Total a Pagar",
-    key: "totalToPay",
-    icon: ArrowDownCircle,
-    color: "text-danger"
-  },
-  {
-    label: "Total Investido",
-    key: "totalInvested",
-    icon: Landmark,
-    color: "text-info"
-  },
-  {
-    label: "Sobra Atual",
-    key: "currentBalance",
-    icon: Wallet,
-    color: "text-warning"
-  }
+const overviewCards = [
+  { key: "entries", label: "Entradas", icon: ArrowUpCircle, color: "text-accent" },
+  { key: "payables", label: "A Pagar", icon: ArrowDownCircle, color: "text-danger" },
+  { key: "expenses", label: "Contas do Mes", icon: BadgeDollarSign, color: "text-warning" },
+  { key: "leftover", label: "Sobra", icon: Wallet, color: "text-info" },
+  { key: "investmentsBRL", label: "Investimentos BRL", icon: Landmark, color: "text-info" },
+  { key: "receivables", label: "A Receber", icon: PiggyBank, color: "text-accent" }
 ] as const;
 
-export function DashboardShell(props: Props) {
-  const {
-    user,
-    selectedMonth,
-    selectedCategory,
-    totals,
-    transactions,
-    investments,
-    summary,
-    creditCards,
-    investmentOverview
-  } = props;
-
+export function DashboardShell({
+  user,
+  selectedMonth,
+  totals,
+  entries,
+  payableBuckets,
+  receivableBuckets,
+  expenseBuckets,
+  classificationTotals,
+  creditCards,
+  investments,
+  investmentOverview,
+  summary,
+  summaryMeta
+}: Props) {
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <Panel className="overflow-hidden bg-grid p-6 sm:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent/10">
@@ -81,25 +53,26 @@ export function DashboardShell(props: Props) {
                 </div>
                 <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
               </div>
+
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">
-                  Visao financeira completa, {user.name?.split(" ")[0] ?? "usuario"}.
+                  Fechamento mensal de {user.name?.split(" ")[0] ?? "usuario"}.
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-muted sm:text-base">
-                  Dashboard com resumo automatico por classificacao, historico mensal, investimentos e controle intuitivo de parcelas do cartao.
+                <p className="max-w-3xl text-sm leading-6 text-muted sm:text-base">
+                  Uma leitura no mesmo formato do seu documento: entradas, a pagar, a receber, contas, sobra e investimentos.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <FilterForm selectedMonth={selectedMonth} selectedCategory={selectedCategory} />
+              <FilterForm selectedMonth={selectedMonth} />
               <SignOutButton />
             </div>
           </div>
         </Panel>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {statCards.map((card) => {
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {overviewCards.map((card) => {
             const Icon = card.icon;
             const value = totals[card.key];
 
@@ -119,47 +92,80 @@ export function DashboardShell(props: Props) {
           })}
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
+        <section className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
           <div className="space-y-6">
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Resumo automatico"
-                title="Classificacao mensal"
-                description="Replica seu fechamento manual com totais por Necessarios, Lazer e Investimentos."
+                eyebrow="Resumo do mes"
+                title="Visao consolidada"
+                description="Totais principais espelhando seu fechamento manual de janeiro e dos proximos meses."
               />
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <SummaryMetric label="Necessarios" value={totals.necessaryTotal} />
-                <SummaryMetric label="Lazer" value={totals.leisureTotal} />
-                <SummaryMetric label="Investimentos" value={totals.investmentCategoryTotal} />
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <SummaryMetric label="Salario Base" value={summaryMeta.salaryBase} subtle />
+                <SummaryMetric label="A Receber" value={totals.receivables} subtle />
+                <SummaryMetric label="A Comprar" value={summaryMeta.purchaseEstimate} subtle />
+                <SummaryMetric label="Retirado dos Investimentos" value={summaryMeta.investmentWithdrawn} subtle />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <SummaryMetric label="Sobra Dinheiro" value={totals.cashLeftover} subtle />
-                <SummaryMetric label="Sobra Digital" value={totals.digitalLeftover} subtle />
+                <SummaryMetric label="Sobra Dinheiro" value={Number(summary?.cashBalance ?? 0)} subtle />
+                <SummaryMetric label="Sobra Digital" value={Number(summary?.digitalBalance ?? 0)} subtle />
               </div>
             </Panel>
 
+            <MonthlySection
+              eyebrow="Entradas"
+              title="Dinheiro que entrou no mes"
+              description={`Total recebido: ${formatCurrency(totals.entries)}`}
+              items={entries}
+              emptyMessage="Nenhuma entrada registrada neste periodo."
+            />
+
+            <BucketSection
+              eyebrow="A pagar"
+              title="Compromissos em aberto"
+              description={`Total a pagar: ${formatCurrency(totals.payables)}`}
+              buckets={payableBuckets}
+              emptyMessage="Nenhum valor pendente neste periodo."
+            />
+
+            <BucketSection
+              eyebrow="A receber"
+              title="Valores que ainda vao entrar"
+              description={`Total a receber: ${formatCurrency(totals.receivables)}`}
+              buckets={receivableBuckets}
+              emptyMessage="Nenhum valor a receber neste periodo."
+            />
+
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Historico financeiro"
-                title="Lancamentos do periodo"
-                description="Tabela filtravel por mes e classificacao com status, fonte e parcelas do cartao."
+                eyebrow="Contas"
+                title="Gastos efetivos do mes"
+                description={`Total de contas do mes: ${formatCurrency(totals.expenses)}`}
               />
-              <HistoryTable transactions={transactions} />
+
+              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste periodo." />
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <SummaryMetric label="Gastos Necessarios" value={classificationTotals.necessary} subtle />
+                <SummaryMetric label="Nao tao necessarios" value={classificationTotals.optional} subtle />
+                <SummaryMetric label="Lazer" value={classificationTotals.leisure} subtle />
+                <SummaryMetric label="Investimentos" value={classificationTotals.investment} subtle />
+              </div>
             </Panel>
 
             <Panel className="space-y-5">
               <SectionHeading
                 eyebrow="Investimentos"
-                title="Carteira e ativos acompanhados"
-                description="Area dedicada para CDB, LCI, fundos, cripto e ETF GOLB11 com conversao simples para USD."
+                title="Carteira do mes"
+                description={`Total: ${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`}
               />
 
               <div className="grid gap-4 md:grid-cols-3">
-                <SummaryMetric label="Investido em BRL" value={investmentOverview.totalBRL} />
-                <SummaryMetric label="Equivalente em USD" value={investmentOverview.totalUSD} currency="USD" />
-                <SummaryMetric label="Ativos cadastrados" value={investments.length} numeric />
+                <SummaryMetric label="Investido em BRL" value={investmentOverview.totalBRL} subtle />
+                <SummaryMetric label="Investido em USD" value={investmentOverview.totalUSD} currency="USD" subtle />
+                <SummaryMetric label="Ativos cadastrados" value={investments.length} numeric subtle />
               </div>
 
               <InvestmentList investments={investments} />
@@ -169,18 +175,18 @@ export function DashboardShell(props: Props) {
           <div className="space-y-6">
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Adicao rapida"
-                title="Novo lancamento"
-                description="Cadastre entrada, saida, investimento ou conta a pagar em um clique."
+                eyebrow="Lancamento rapido"
+                title="Novo item do fechamento"
+                description="Use este formulario para registrar entradas, contas, parcelas, valores a receber e outros movimentos."
               />
               <TransactionForm creditCards={creditCards} />
             </Panel>
 
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Cartao de credito"
-                title="Parcelamento intuitivo"
-                description="Cadastre o cartao e use os campos atual/total para registrar 7/12, 1/2 e similares."
+                eyebrow="Cartoes"
+                title="Controle intuitivo de parcelas"
+                description="Mantenha os cartoes separados e registre parcela atual/total para acompanhar 5/12, 1/2 e similares."
               />
               <CreditCardForm />
               <CreditCardList creditCards={creditCards} />
@@ -188,20 +194,20 @@ export function DashboardShell(props: Props) {
 
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Investimentos"
-                title="Adicionar ativo"
-                description="Inclua ticker, instituicao, valor em BRL e taxa de cambio para gerar USD automaticamente."
+                eyebrow="Fechamento mensal"
+                title="Sobra, salario e observacoes"
+                description="Consolide salario base, sobra em dinheiro, sobra digital, compras planejadas e retiradas de investimentos."
               />
-              <InvestmentForm />
+              <SummaryForm selectedMonth={selectedMonth} summary={summary} summaryMeta={summaryMeta} />
             </Panel>
 
             <Panel className="space-y-5">
               <SectionHeading
-                eyebrow="Fechamento"
-                title="Resumo de sobra"
-                description="Registre a sobra em dinheiro e digital para fechar o mes com precisao."
+                eyebrow="Adicionar ativo"
+                title="Investimento"
+                description="Cadastre CDB, LCI, fundos, cripto, Binance, MB e posicao em USD."
               />
-              <SummaryForm selectedMonth={selectedMonth} summary={summary} />
+              <InvestmentForm />
             </Panel>
           </div>
         </section>
@@ -210,20 +216,12 @@ export function DashboardShell(props: Props) {
   );
 }
 
-function FilterForm({ selectedMonth, selectedCategory }: { selectedMonth: string; selectedCategory: TransactionCategory | "ALL" }) {
+function FilterForm({ selectedMonth }: { selectedMonth: string }) {
   return (
     <form className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
       <Input type="month" name="month" defaultValue={selectedMonth} className="min-w-40 bg-transparent" />
-      <Select name="category" defaultValue={selectedCategory} className="min-w-40 bg-transparent">
-        <option value="ALL">Todas categorias</option>
-        {Object.entries(transactionCategoryLabels).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </Select>
       <Button type="submit" variant="secondary">
-        Filtrar
+        Filtrar mes
       </Button>
     </form>
   );
@@ -250,55 +248,97 @@ function SummaryMetric({
   );
 }
 
-function HistoryTable({ transactions }: { transactions: Array<Transaction & { creditCard: CreditCard | null }> }) {
+function MonthlySection({
+  eyebrow,
+  title,
+  description,
+  items,
+  emptyMessage
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  items: TransactionWithCard[];
+  emptyMessage: string;
+}) {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
-        <thead className="text-muted">
-          <tr className="border-b border-white/10">
-            <th className="pb-3 font-medium">Titulo</th>
-            <th className="pb-3 font-medium">Tipo</th>
-            <th className="pb-3 font-medium">Categoria</th>
-            <th className="pb-3 font-medium">Status</th>
-            <th className="pb-3 font-medium">Data</th>
-            <th className="pb-3 font-medium">Valor</th>
-            <th className="pb-3 font-medium">Cartao</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((transaction) => (
-            <tr key={transaction.id} className="border-b border-white/5 text-white/90 last:border-b-0">
-              <td className="py-4">
-                <div>
-                  <p className="font-medium text-white">{transaction.title}</p>
-                  {transaction.source ? <p className="text-xs text-muted">{transaction.source}</p> : null}
-                </div>
-              </td>
-              <td className="py-4">{transactionTypeLabels[transaction.type]}</td>
-              <td className="py-4">{transactionCategoryLabels[transaction.category]}</td>
-              <td className="py-4">{transactionStatusLabels[transaction.status]}</td>
-              <td className="py-4">{formatDate(transaction.transactionDate)}</td>
-              <td className="py-4 font-medium">{formatCurrency(Number(transaction.amount))}</td>
-              <td className="py-4 text-muted">
-                {transaction.isCreditCard
-                  ? `${transaction.creditCard?.name ?? "Cartao"}${
-                      transaction.installmentCurrent && transaction.installmentTotal
-                        ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
-                        : ""
-                    }`
-                  : "-"}
-              </td>
-            </tr>
-          ))}
-          {transactions.length === 0 ? (
-            <tr>
-              <td colSpan={7} className="py-8 text-center text-muted">
-                Nenhum lancamento encontrado para os filtros atuais.
-              </td>
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
+    <Panel className="space-y-5">
+      <SectionHeading eyebrow={eyebrow} title={title} description={description} />
+      <TransactionList items={items} emptyMessage={emptyMessage} />
+    </Panel>
+  );
+}
+
+function BucketSection({
+  eyebrow,
+  title,
+  description,
+  buckets,
+  emptyMessage
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  buckets: StatementBucket[];
+  emptyMessage: string;
+}) {
+  return (
+    <Panel className="space-y-5">
+      <SectionHeading eyebrow={eyebrow} title={title} description={description} />
+      <BucketList buckets={buckets} emptyMessage={emptyMessage} />
+    </Panel>
+  );
+}
+
+function BucketList({ buckets, emptyMessage }: { buckets: StatementBucket[]; emptyMessage: string }) {
+  if (buckets.length === 0) {
+    return <p className="text-sm text-muted">{emptyMessage}</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {buckets.map((bucket) => (
+        <div key={bucket.key} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="mb-4 flex items-center justify-between gap-4 border-b border-white/8 pb-4">
+            <h3 className="text-lg font-semibold text-white">{bucket.label}</h3>
+            <p className="text-base font-semibold text-accent">{formatCurrency(bucket.total)}</p>
+          </div>
+          <TransactionList items={bucket.items} emptyMessage="Nenhum item." compact />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TransactionList({ items, emptyMessage, compact = false }: { items: TransactionWithCard[]; emptyMessage: string; compact?: boolean }) {
+  if (items.length === 0) {
+    return <p className="text-sm text-muted">{emptyMessage}</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((transaction) => (
+        <div key={transaction.id} className={cn("rounded-2xl border border-white/8 bg-white/[0.02]", compact ? "p-3" : "p-4")}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-medium text-white">{transaction.title}</p>
+              <p className="text-sm text-muted">
+                {transaction.source ? `${transaction.source} • ` : ""}
+                {formatDate(transaction.transactionDate)}
+                {transaction.isCreditCard && transaction.installmentCurrent && transaction.installmentTotal
+                  ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
+                  : ""}
+              </p>
+              {transaction.description ? <p className="mt-1 text-xs text-muted">{transaction.description}</p> : null}
+            </div>
+
+            <div className="text-right">
+              <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
+              <p className="text-xs text-muted">{transactionStatusLabels[transaction.status]}</p>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -308,8 +348,8 @@ function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
 
   return (
     <form action={createTransaction} className="grid gap-3">
-      <Input name="title" placeholder="Ex: Salario, Aluguel, GOLB11" required />
-      <Input name="description" placeholder="Descricao opcional" />
+      <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Pai" required />
+      <Input name="description" placeholder="Observacao ou detalhe" />
       <div className="grid gap-3 md:grid-cols-2">
         <Select name="type" defaultValue="EXPENSE">
           {Object.entries(transactionTypeLabels).map(([value, label]) => (
@@ -338,11 +378,11 @@ function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
             </option>
           ))}
         </Select>
-        <Input name="source" placeholder="Fonte ou conta" />
+        <Input name="source" placeholder="Grupo: Cartao, Nicoli, Pai, Outros" />
       </div>
       <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white">
         <input type="checkbox" name="isCreditCard" className="h-4 w-4 rounded" />
-        Compra no cartao de credito
+        Movimento no cartao de credito
       </label>
       <Select name="creditCardId" defaultValue="">
         <option value="">Selecione o cartao</option>
@@ -356,7 +396,7 @@ function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
         <Input name="installmentCurrent" type="number" min="1" placeholder="Parcela atual" />
         <Input name="installmentTotal" type="number" min="1" placeholder="Total de parcelas" />
       </div>
-      <Button type="submit">Salvar lancamento</Button>
+      <Button type="submit">Salvar item</Button>
     </form>
   );
 }
@@ -410,11 +450,11 @@ function InvestmentForm() {
   return (
     <form action={createInvestment} className="grid gap-3">
       <div className="grid gap-3 md:grid-cols-2">
-        <Input name="name" placeholder="Ex: Banco Inter GOLB11" required />
+        <Input name="name" placeholder="Ex: CDB Liquidez Diaria" required />
         <Input name="ticker" placeholder="Ticker" />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <Select name="assetType" defaultValue="ETF">
+        <Select name="assetType" defaultValue="CDB">
           {Object.entries(assetTypeLabels).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
@@ -433,7 +473,7 @@ function InvestmentForm() {
       </div>
       <Input name="notes" placeholder="Observacoes" />
       <Button type="submit" variant="secondary">
-        Salvar ativo
+        Salvar investimento
       </Button>
     </form>
   );
@@ -445,7 +485,7 @@ function InvestmentList({ investments }: { investments: Investment[] }) {
   }
 
   return (
-    <div className="grid gap-3">
+    <div className="space-y-3">
       {investments.map((investment) => (
         <div key={investment.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -455,7 +495,8 @@ function InvestmentList({ investments }: { investments: Investment[] }) {
                 {investment.ticker ? <span className="text-muted"> • {investment.ticker}</span> : null}
               </p>
               <p className="text-sm text-muted">
-                {assetTypeLabels[investment.assetType]}{investment.institution ? ` • ${investment.institution}` : ""}
+                {assetTypeLabels[investment.assetType]}
+                {investment.institution ? ` • ${investment.institution}` : ""}
               </p>
             </div>
 
@@ -472,10 +513,34 @@ function InvestmentList({ investments }: { investments: Investment[] }) {
   );
 }
 
-function SummaryForm({ selectedMonth, summary }: { selectedMonth: string; summary: Summary | null }) {
+function SummaryForm({
+  selectedMonth,
+  summary,
+  summaryMeta
+}: {
+  selectedMonth: string;
+  summary: Summary | null;
+  summaryMeta: { salaryBase: number; purchaseEstimate: number; investmentWithdrawn: number; noteText: string };
+}) {
   return (
     <form action={upsertSummary} className="grid gap-3">
       <Input type="month" name="monthReference" defaultValue={selectedMonth} required />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Input
+          name="salaryBase"
+          type="number"
+          step="0.01"
+          placeholder="Salario base"
+          defaultValue={summaryMeta.salaryBase}
+        />
+        <Input
+          name="purchaseEstimate"
+          type="number"
+          step="0.01"
+          placeholder="A comprar"
+          defaultValue={summaryMeta.purchaseEstimate}
+        />
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         <Input
           name="cashBalance"
@@ -494,9 +559,16 @@ function SummaryForm({ selectedMonth, summary }: { selectedMonth: string; summar
           required
         />
       </div>
-      <Input name="note" placeholder="Observacao" defaultValue={summary?.note ?? ""} />
+      <Input
+        name="investmentWithdrawn"
+        type="number"
+        step="0.01"
+        placeholder="Retirado dos investimentos"
+        defaultValue={summaryMeta.investmentWithdrawn}
+      />
+      <Input name="noteText" placeholder="Observacao" defaultValue={summaryMeta.noteText} />
       <Button type="submit" variant="secondary">
-        Salvar resumo
+        Salvar fechamento
       </Button>
     </form>
   );

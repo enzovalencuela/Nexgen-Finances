@@ -1,16 +1,16 @@
-import { AssetType, Prisma, TransactionCategory, TransactionType } from "@prisma/client";
+import { AssetType, Prisma, TransactionCategory, TransactionStatus, TransactionType } from "@prisma/client";
 
 import { getPrisma } from "@/lib/prisma";
+import { parseSummaryMeta } from "@/lib/summary-meta";
 import { monthBounds, toMonthInput } from "@/lib/utils";
-import type { DashboardTotals } from "@/lib/types";
+import type { ClassificationTotals, DashboardTotals, MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 
 type DashboardDataParams = {
   userId: string;
   month?: string;
-  category?: TransactionCategory | "ALL";
 };
 
-export async function getDashboardData({ userId, month, category = "ALL" }: DashboardDataParams) {
+export async function getDashboardData({ userId, month }: DashboardDataParams): Promise<MonthlyStatementData> {
   const prisma = getPrisma();
   const selectedMonth = month ?? toMonthInput();
   const { start, end } = monthBounds(selectedMonth);
@@ -20,8 +20,7 @@ export async function getDashboardData({ userId, month, category = "ALL" }: Dash
     transactionDate: {
       gte: start,
       lte: end
-    },
-    ...(category === "ALL" ? {} : { category })
+    }
   };
 
   const [transactions, investments, summary, creditCards] = await Promise.all([
@@ -61,70 +60,136 @@ export async function getDashboardData({ userId, month, category = "ALL" }: Dash
     })
   ]);
 
+  const typedTransactions = transactions as TransactionWithCard[];
+  const summaryMeta = parseSummaryMeta(summary?.note);
+
+  const entries = typedTransactions.filter(
+    (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID
+  );
+  const payables = typedTransactions.filter((transaction) => transaction.type === TransactionType.BILL);
+  const receivables = typedTransactions.filter(
+    (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING
+  );
+  const expenses = typedTransactions.filter(
+    (transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID
+  );
+
+  const payableBuckets = groupTransactions(payables, ["Cartao", "Contas Nicoli", "Outros", "Investimentos"]);
+  const receivableBuckets = groupTransactions(receivables, ["Pai", "Nicoli", "Outros"]);
+  const expenseBuckets = groupTransactions(expenses, ["Cartao", "Contas Nicoli", "Outros"]);
+  const classificationTotals = buildClassificationTotals(expenses);
+  const investmentOverview = buildInvestmentOverview(investments);
+
   const totals = transactions.reduce<DashboardTotals>(
     (acc, transaction) => {
       const amount = Number(transaction.amount);
 
-      if (transaction.type === TransactionType.INCOME && transaction.status === "PAID") {
-        acc.totalReceived += amount;
+      if (transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID) {
+        acc.entries += amount;
       }
 
-      if (
-        transaction.type === TransactionType.BILL ||
-        (transaction.type === TransactionType.EXPENSE && transaction.status === "PENDING")
-      ) {
-        acc.totalToPay += amount;
+      if (transaction.type === TransactionType.BILL) {
+        acc.payables += amount;
       }
 
-      if (transaction.type === TransactionType.INVESTMENT) {
-        acc.totalInvested += amount;
+      if (transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING) {
+        acc.receivables += amount;
       }
 
-      if (transaction.category === TransactionCategory.NECESSARY) {
-        acc.necessaryTotal += amount;
-      }
-
-      if (transaction.category === TransactionCategory.LEISURE) {
-        acc.leisureTotal += amount;
-      }
-
-      if (transaction.category === TransactionCategory.INVESTMENT) {
-        acc.investmentCategoryTotal += amount;
-      }
-
-      if (transaction.status === "PAID") {
-        if (transaction.type === TransactionType.INCOME) {
-          acc.currentBalance += amount;
-        } else {
-          acc.currentBalance -= amount;
-        }
+      if (transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID) {
+        acc.expenses += amount;
       }
 
       return acc;
     },
     {
-      totalReceived: 0,
-      totalToPay: 0,
-      totalInvested: 0,
-      currentBalance: 0,
-      necessaryTotal: 0,
-      leisureTotal: 0,
-      investmentCategoryTotal: 0,
-      cashLeftover: Number(summary?.cashBalance ?? 0),
-      digitalLeftover: Number(summary?.digitalBalance ?? 0)
+      entries: 0,
+      payables: 0,
+      receivables: 0,
+      expenses: 0,
+      leftover: Number(summary?.cashBalance ?? 0) + Number(summary?.digitalBalance ?? 0),
+      investmentsBRL: investmentOverview.totalBRL,
+      investmentsUSD: investmentOverview.totalUSD
     }
   );
 
   return {
     selectedMonth,
-    selectedCategory: category,
     totals,
-    transactions,
+    entries,
+    payableBuckets,
+    receivableBuckets,
+    expenseBuckets,
+    classificationTotals,
     investments,
     summary,
+    summaryMeta,
     creditCards,
-    investmentOverview: buildInvestmentOverview(investments)
+    investmentOverview
   };
+}
+
+function groupTransactions(transactions: TransactionWithCard[], preferredOrder: string[]): StatementBucket[] {
+  const buckets = new Map<string, StatementBucket>();
+
+  for (const transaction of transactions) {
+    const label = transaction.source?.trim() || "Outros";
+    const key = label.toLowerCase();
+    const current = buckets.get(key);
+
+    if (current) {
+      current.total += Number(transaction.amount);
+      current.items.push(transaction);
+      continue;
+    }
+
+    buckets.set(key, {
+      key,
+      label,
+      total: Number(transaction.amount),
+      items: [transaction]
+    });
+  }
+
+  return Array.from(buckets.values()).sort((left, right) => {
+    const leftIndex = preferredOrder.findIndex((item) => item.toLowerCase() === left.label.toLowerCase());
+    const rightIndex = preferredOrder.findIndex((item) => item.toLowerCase() === right.label.toLowerCase());
+
+    const normalizedLeft = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
+    const normalizedRight = rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
+
+    if (normalizedLeft !== normalizedRight) {
+      return normalizedLeft - normalizedRight;
+    }
+
+    return left.label.localeCompare(right.label);
+  });
+}
+
+function buildClassificationTotals(transactions: TransactionWithCard[]): ClassificationTotals {
+  return transactions.reduce<ClassificationTotals>(
+    (acc, transaction) => {
+      const amount = Number(transaction.amount);
+
+      if (transaction.category === TransactionCategory.NECESSARY) {
+        acc.necessary += amount;
+      } else if (transaction.category === TransactionCategory.LEISURE) {
+        acc.leisure += amount;
+      } else if (transaction.category === TransactionCategory.INVESTMENT) {
+        acc.investment += amount;
+      } else {
+        acc.optional += amount;
+      }
+
+      return acc;
+    },
+    {
+      necessary: 0,
+      optional: 0,
+      leisure: 0,
+      investment: 0
+    }
+  );
 }
 
 function buildInvestmentOverview(
