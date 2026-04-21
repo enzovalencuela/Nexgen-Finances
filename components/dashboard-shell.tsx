@@ -19,6 +19,11 @@ type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
 };
 
+type SectionTheme = {
+  panel: string;
+  total: string;
+};
+
 const sectionThemes = {
   entries: {
     panel: "border-cyan-400/30 bg-cyan-500/5",
@@ -294,7 +299,7 @@ function MonthlySection({
   items: TransactionWithCard[];
   emptyMessage: string;
   creditCards: CreditCard[];
-  theme: { panel: string; eyebrow: string; total: string };
+  theme: SectionTheme;
 }) {
   return (
     <Panel className={cn("space-y-5", theme.panel)}>
@@ -319,7 +324,7 @@ function BucketSection({
   buckets: StatementBucket[];
   emptyMessage: string;
   creditCards: CreditCard[];
-  theme: { panel: string; eyebrow: string; total: string };
+  theme: SectionTheme;
 }) {
   return (
     <Panel className={cn("space-y-5", theme.panel)}>
