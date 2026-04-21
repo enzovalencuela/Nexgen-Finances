@@ -22,8 +22,9 @@ type ClassificationChartProps = {
 const overviewColors = ["#4ade80", "#facc15", "#38bdf8", "#f472b6", "#a78bfa"];
 const classificationColors = ["#9333ea", "#06b6d4", "#39ff14", "#d1d5db"];
 
-function tooltipFormatter(value: number | string | undefined) {
-  const normalized = typeof value === "number" ? value : Number(value ?? 0);
+function tooltipFormatter(value: unknown) {
+  const baseValue = Array.isArray(value) ? value[0] : value;
+  const normalized = typeof baseValue === "number" ? baseValue : Number(baseValue ?? 0);
   return [formatCurrency(normalized), "Valor"] as [string, string];
 }
 
