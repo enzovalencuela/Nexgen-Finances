@@ -2,7 +2,7 @@ import { AssetType, Prisma, TransactionCategory, TransactionStatus, TransactionT
 
 import { getPrisma } from "@/lib/prisma";
 import { parseSummaryMeta } from "@/lib/summary-meta";
-import { monthBounds, toMonthInput } from "@/lib/utils";
+import { buildRecentMonths, formatMonthLabel, monthBounds, toMonthInput } from "@/lib/utils";
 import type { CardInvoiceSection, CardInvoiceView, ClassificationTotals, DashboardTotals, MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 
 type DashboardDataParams = {
@@ -180,6 +180,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const receivableBuckets = groupTransactions(receivables, ["Pai", "Nicoli", "Outros"]);
   const expenseBuckets = groupTransactions(expenses, ["Cartao", "Contas Nicoli", "Outros"]);
   const cardInvoices = buildCardInvoices({
+    selectedMonth,
     creditCards,
     monthTransactions,
     rolledOverCardBills,
@@ -332,11 +333,13 @@ function buildRolledOverCardBills({
 }
 
 function buildCardInvoices({
+  selectedMonth,
   creditCards,
   monthTransactions,
   rolledOverCardBills,
   cardPayments
 }: {
+  selectedMonth: string;
   creditCards: MonthlyStatementData["creditCards"];
   monthTransactions: TransactionWithCard[];
   rolledOverCardBills: TransactionWithCard[];
@@ -394,6 +397,17 @@ function buildCardInvoices({
 
     return {
       creditCard,
+      monthReference: selectedMonth,
+      monthLabel: formatMonthLabel(selectedMonth),
+      closingDate: buildCycleDate(selectedMonth, creditCard.closingDay),
+      dueDate: buildCycleDate(selectedMonth, creditCard.dueDay),
+      status: resolveInvoiceStatus({
+        invoiceTotal: openChargesTotal - paymentsTotal,
+        openChargesTotal,
+        overdueTotal,
+        paymentsTotal
+      }),
+      hasActivity: openChargesTotal > 0 || paymentsTotal > 0,
       invoiceTotal: openChargesTotal - paymentsTotal,
       openChargesTotal,
       overdueTotal,
@@ -403,6 +417,25 @@ function buildCardInvoices({
       sections
     };
   });
+}
+
+export async function getCardInvoiceTimeline({
+  userId,
+  cardId,
+  month,
+  total = 6
+}: {
+  userId: string;
+  cardId: string;
+  month: string;
+  total?: number;
+}) {
+  const months = buildRecentMonths(month, total);
+  const snapshots = await Promise.all(months.map((item) => getDashboardData({ userId, month: item })));
+
+  return snapshots
+    .map((snapshot) => snapshot.cardInvoices.find((invoice) => invoice.creditCard.id === cardId) ?? null)
+    .filter((invoice): invoice is CardInvoiceView => invoice !== null);
 }
 
 function hasCarryoverEntry(entries: TransactionWithCard[]) {
@@ -505,6 +538,47 @@ function addMonthsKeepingDay(date: Date | string, monthsToAdd: number) {
     source.getSeconds(),
     source.getMilliseconds()
   );
+}
+
+function buildCycleDate(month: string, day: number | null) {
+  if (!day) {
+    return null;
+  }
+
+  const { start } = monthBounds(month);
+  const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+
+  return new Date(start.getFullYear(), start.getMonth(), Math.min(day, lastDay));
+}
+
+function resolveInvoiceStatus({
+  invoiceTotal,
+  openChargesTotal,
+  overdueTotal,
+  paymentsTotal
+}: {
+  invoiceTotal: number;
+  openChargesTotal: number;
+  overdueTotal: number;
+  paymentsTotal: number;
+}) {
+  if (openChargesTotal <= 0 && paymentsTotal <= 0) {
+    return "empty" as const;
+  }
+
+  if (invoiceTotal <= 0 && openChargesTotal > 0) {
+    return "paid" as const;
+  }
+
+  if (paymentsTotal > 0 && invoiceTotal > 0) {
+    return overdueTotal > 0 ? "overdue" as const : "partial" as const;
+  }
+
+  if (overdueTotal > 0) {
+    return "overdue" as const;
+  }
+
+  return "open" as const;
 }
 
 function collapseInvestmentHistory(investments: InvestmentSnapshot[]) {

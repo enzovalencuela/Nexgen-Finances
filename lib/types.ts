@@ -34,8 +34,16 @@ export type CardInvoiceSection = {
   emptyMessage: string;
 };
 
+export type CardInvoiceStatus = "empty" | "paid" | "partial" | "open" | "overdue";
+
 export type CardInvoiceView = {
   creditCard: CreditCard;
+  monthReference: string;
+  monthLabel: string;
+  closingDate: Date | null;
+  dueDate: Date | null;
+  status: CardInvoiceStatus;
+  hasActivity: boolean;
   invoiceTotal: number;
   openChargesTotal: number;
   overdueTotal: number;

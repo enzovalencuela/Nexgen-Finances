@@ -12,7 +12,7 @@ import { cn, formatMonthLabel } from "@/lib/utils";
 type Props = {
   user: Pick<User, "name" | "email" | "image">;
   selectedMonth: string;
-  currentPath: "/" | "/fechamento" | "/cartoes";
+  currentPath: "/" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
   title: string;
   description: string;
   children: React.ReactNode;
@@ -53,7 +53,7 @@ export function AppShell({ user, selectedMonth, currentPath, title, description,
               <nav className="flex flex-wrap gap-3">
                 {navItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = item.href === currentPath;
+                  const isActive = currentPath === item.href || currentPath.startsWith(`${item.href}/`);
 
                   return (
                     <Link

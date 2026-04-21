@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CreditCard, Investment } from "@prisma/client";
 
 import { EditableCreditCard } from "@/components/editable-credit-card";
@@ -70,7 +71,15 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   return (
     <div className="grid gap-3">
       {creditCards.map((creditCard) => (
-        <EditableCreditCard key={creditCard.id} creditCard={creditCard} />
+        <div key={creditCard.id} className="space-y-2">
+          <Link
+            href={`/cartoes/${creditCard.id}`}
+            className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-sm text-accent transition hover:bg-accent/10"
+          >
+            Abrir pagina do cartao
+          </Link>
+          <EditableCreditCard creditCard={creditCard} />
+        </div>
       ))}
     </div>
   );

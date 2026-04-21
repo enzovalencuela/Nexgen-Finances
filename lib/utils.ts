@@ -34,6 +34,15 @@ export function formatMonthLabel(month: string) {
   }).format(new Date(year, monthIndex - 1, 1));
 }
 
+export function addMonthsToMonthInput(month: string, monthsToAdd: number) {
+  const [year, monthIndex] = month.split("-").map(Number);
+  return toMonthInput(new Date(year, monthIndex - 1 + monthsToAdd, 1));
+}
+
+export function buildRecentMonths(month: string, total: number) {
+  return Array.from({ length: total }, (_, index) => addMonthsToMonthInput(month, -index));
+}
+
 export function monthBounds(month: string) {
   const [year, monthIndex] = month.split("-").map(Number);
   const start = new Date(year, monthIndex - 1, 1);

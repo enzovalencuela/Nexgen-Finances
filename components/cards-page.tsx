@@ -1,4 +1,5 @@
 import { AlertTriangle, CreditCard, ReceiptText } from "lucide-react";
+import Link from "next/link";
 import type { User } from "@prisma/client";
 
 import { AppShell } from "@/components/app-shell";
@@ -78,12 +79,17 @@ function InvoiceCard({ invoice, creditCards }: { invoice: CardInvoiceView; credi
             Fecha dia {invoice.creditCard.closingDay ?? "-"} • vence dia {invoice.creditCard.dueDay ?? "-"}
             {invoice.creditCard.note ? ` • ${invoice.creditCard.note}` : ""}
           </p>
+          <div className="mt-4">
+            <Link href={`/cartoes/${invoice.creditCard.id}?month=${invoice.monthReference}`} className="inline-flex items-center gap-2 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-2 text-sm text-accent transition hover:bg-accent/10">
+              Abrir timeline deste cartao
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <InvoiceStat label="Fatura atual" value={formatCurrency(invoice.invoiceTotal)} strong />
+          <InvoiceStat label="Status" value={invoice.status === "paid" ? "Quitada" : invoice.status === "partial" ? "Parcial" : invoice.status === "overdue" ? "Em atraso" : invoice.status === "open" ? "Aberta" : "Sem movimento"} />
           <InvoiceStat label="Atrasado" value={formatCurrency(invoice.overdueTotal)} warning={invoice.overdueTotal > 0} />
-          <InvoiceStat label="Compras abertas" value={formatCurrency(invoice.openChargesTotal)} />
           <InvoiceStat label="Pagamentos" value={formatCurrency(invoice.paymentsTotal)} />
         </div>
       </div>
