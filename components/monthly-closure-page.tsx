@@ -49,43 +49,49 @@ export function MonthlyClosurePage({
           <p className="mt-1 text-[13px] text-slate-500">Leitura simples das entradas, pendências, contas, sobra e investimentos.</p>
         </header>
 
-        <section className="grid gap-8 xl:grid-cols-[1fr_1fr]">
-          <NotebookBlock title="Entradas" totalLabel={`Total recebido: ${formatCurrency(totals.entries)}`} tone="cyan">
-            <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={themes.entries} />
-          </NotebookBlock>
+        <section className="grid gap-8 xl:grid-cols-2 xl:items-start">
+          <div className="space-y-8">
+            <NotebookBlock title="Entradas" totalLabel={`Total recebido: ${formatCurrency(totals.entries)}`} tone="cyan">
+              <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={themes.entries} />
+            </NotebookBlock>
 
-          <NotebookBlock title="Contas" totalLabel={`Total gasto: ${formatCurrency(totals.expenses)}`} tone="magenta">
-            <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste período." creditCards={creditCards} accentClass={themes.expenses} />
-          </NotebookBlock>
+            <NotebookBlock title="A pagar" totalLabel={`Total a pagar: ${formatCurrency(totals.payables)}`} tone="teal">
+              <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste período." creditCards={creditCards} accentClass={themes.payables} />
+            </NotebookBlock>
 
-          <NotebookBlock title="A pagar" totalLabel={`Total a pagar: ${formatCurrency(totals.payables)}`} tone="teal">
-            <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste período." creditCards={creditCards} accentClass={themes.payables} />
-          </NotebookBlock>
+            <NotebookBlock title="A receber" totalLabel={`Total a receber: ${formatCurrency(totals.receivables)}`} tone="blue">
+              <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste período." creditCards={creditCards} accentClass={themes.receivables} />
+            </NotebookBlock>
+          </div>
 
-          <NotebookBlock title="Resumo do mês" tone="yellow">
-            <SummaryLine label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
-            <SummaryLine label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
-            <SummaryLine label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
-            <SummaryLine label="Sobra total" value={formatCurrency(totals.leftover)} />
-            <SummaryLine label="Investimentos" value={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} />
-          </NotebookBlock>
+          <div className="space-y-8">
+            <NotebookBlock title="Contas" totalLabel={`Total gasto: ${formatCurrency(totals.expenses)}`} tone="magenta">
+              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste período." creditCards={creditCards} accentClass={themes.expenses} />
+            </NotebookBlock>
 
-          <NotebookBlock title="A receber" totalLabel={`Total a receber: ${formatCurrency(totals.receivables)}`} tone="blue">
-            <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste período." creditCards={creditCards} accentClass={themes.receivables} />
-          </NotebookBlock>
+            <NotebookBlock title="Resumo do mês" tone="yellow">
+              <SummaryLine label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
+              <SummaryLine label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
+              <SummaryLine label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
+              <SummaryLine label="Sobra total" value={formatCurrency(totals.leftover)} />
+              <SummaryLine label="Investimentos" value={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} />
+            </NotebookBlock>
 
-          <NotebookBlock title="Classificação" tone="gray">
-            <div className="rounded-lg border border-slate-300 bg-white p-3">
-              <ClassificationPieChart
-                necessary={classificationTotals.necessary}
-                optional={classificationTotals.optional}
-                leisure={classificationTotals.leisure}
-                investment={classificationTotals.investment}
-              />
-            </div>
-          </NotebookBlock>
+            <NotebookBlock title="Classificação" tone="gray">
+              <div className="rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <ClassificationPieChart
+                  necessary={classificationTotals.necessary}
+                  optional={classificationTotals.optional}
+                  leisure={classificationTotals.leisure}
+                  investment={classificationTotals.investment}
+                />
+              </div>
+            </NotebookBlock>
+          </div>
+        </section>
 
-          <NotebookBlock title="Investimentos" totalLabel={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} tone="gray" className="xl:col-span-2">
+        <section>
+          <NotebookBlock title="Investimentos" totalLabel={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} tone="gray">
             <InvestmentList investments={investments} />
           </NotebookBlock>
         </section>
@@ -123,14 +129,14 @@ function NotebookBlock({ title, totalLabel, tone, className, children }: { title
     blue: "border-sky-300 bg-sky-50",
     magenta: "border-fuchsia-300 bg-fuchsia-50",
     yellow: "border-yellow-300 bg-yellow-50",
-    gray: "border-slate-300 bg-white"
+    gray: "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900"
   };
 
   return (
     <section className={className}>
       <div className="mb-3">
-        <h2 className="text-[1rem] font-bold uppercase text-slate-900">{title}:</h2>
-        {totalLabel ? <p className="mt-1 inline-block bg-cyan-200 px-1.5 py-0.5 text-[13px] font-semibold text-slate-900">{totalLabel}</p> : null}
+        <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">{title}:</h2>
+        {totalLabel ? <p className="mt-1 inline-block bg-cyan-200 px-1.5 py-0.5 text-[13px] font-semibold text-slate-900 dark:bg-cyan-900/50 dark:text-cyan-50">{totalLabel}</p> : null}
       </div>
       <div className={`rounded-md border p-3 ${toneClasses[tone]}`}>{children}</div>
     </section>
@@ -139,9 +145,9 @@ function NotebookBlock({ title, totalLabel, tone, className, children }: { title
 
 function SummaryLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-slate-800 last:mb-0">
+    <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-slate-800 last:mb-0 dark:text-slate-200">
       <span>{label}</span>
-      <span className="bg-cyan-200 px-1.5 py-0.5 font-semibold text-slate-900">{value}</span>
+      <span className="bg-cyan-200 px-1.5 py-0.5 font-semibold text-slate-900 dark:bg-cyan-900/50 dark:text-cyan-50">{value}</span>
     </div>
   );
 }
