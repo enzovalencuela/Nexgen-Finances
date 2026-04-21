@@ -17,8 +17,6 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Select } from "@/components/ui/select";
 import { SignOutButton } from "@/components/sign-out-button";
 
-type TotalKey = keyof MonthlyStatementData["totals"];
-
 type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
 };
@@ -78,14 +76,13 @@ export function DashboardShell({
   summary,
   summaryMeta
 }: Props) {
-  const spentAmount = Math.max(totals.entries - totals.leftover, 0);
   const baseForPercent = totals.entries > 0 ? totals.entries : 1;
 
   const heroCards = [
     { id: "entries", label: "Total Recebido", icon: ArrowUpCircle, color: "text-cyan-300", value: totals.entries },
-    { id: "spent", label: "Ja Gastei/Paguei", icon: Landmark, color: "text-fuchsia-300", value: spentAmount },
     { id: "payables", label: "Total a Pagar", icon: ArrowDownCircle, color: "text-yellow-200", value: totals.payables },
     { id: "receivables", label: "Total a Receber", icon: PiggyBank, color: "text-sky-300", value: totals.receivables },
+    { id: "expenses", label: "Contas", icon: Landmark, color: "text-fuchsia-300", value: totals.expenses },
     { id: "leftover", label: "Total Restante", icon: Wallet, color: "text-violet-300", value: totals.leftover }
   ];
 
