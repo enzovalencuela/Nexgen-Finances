@@ -3,8 +3,8 @@ import { TransactionCategory } from "@prisma/client";
 
 import { DashboardShell } from "@/components/dashboard-shell";
 import { auth } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/current-user";
 import { getDashboardData } from "@/lib/finance";
-import { prisma } from "@/lib/prisma";
 import { toMonthInput } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -20,15 +20,7 @@ export default async function HomePage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true
-    }
-  });
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");

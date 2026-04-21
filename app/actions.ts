@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { AssetType, TransactionCategory, TransactionStatus, TransactionType } from "@prisma/client";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { getRequiredCurrentUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
 const transactionSchema = z.object({
@@ -50,20 +50,7 @@ const creditCardSchema = z.object({
 });
 
 async function getCurrentUserId() {
-  const session = await auth();
-  if (!session?.user?.email) {
-    throw new Error("Usuario nao autenticado.");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    select: { id: true }
-  });
-
-  if (!user) {
-    throw new Error("Usuario nao encontrado.");
-  }
-
+  const user = await getRequiredCurrentUser();
   return user.id;
 }
 
