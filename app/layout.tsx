@@ -11,9 +11,8 @@ export const metadata: Metadata = {
   title: "Nexgen Finance",
   description: "Controle financeiro moderno com dashboard, historico e investimentos.",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/favicon.ico"
+    icon: [{ url: "/favicon.ico?v=2", sizes: "any", type: "image/x-icon" }],
+    shortcut: ["/favicon.ico?v=2"]
   }
 };
 
