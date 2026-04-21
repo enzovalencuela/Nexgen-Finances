@@ -16,6 +16,24 @@ body {
   color: #e5eefb;
 }
 
+.ledger-paper {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.022)),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(148, 163, 184, 0.11) 0,
+      rgba(148, 163, 184, 0.11) 1px,
+      transparent 1px,
+      transparent 38px
+    );
+  background-size: 100% 100%, 100% 39px;
+}
+
+.paper-dots {
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.16) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
 * {
   border-color: rgba(148, 163, 184, 0.16);
 }

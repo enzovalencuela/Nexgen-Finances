@@ -41,7 +41,13 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
       </summary>
 
       <div className="mt-4 border-t border-white/10 pt-4">
-        <form action={updateTransaction} className="grid gap-3">
+        <form
+          action={async (formData) => {
+            "use server";
+            await updateTransaction(formData);
+          }}
+          className="grid gap-3"
+        >
           <input type="hidden" name="id" value={transaction.id} />
           <div className="grid gap-3 md:grid-cols-2">
             <Input name="title" defaultValue={transaction.title} />
@@ -97,7 +103,13 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           </div>
         </form>
 
-        <form action={deleteTransaction} className="mt-3">
+        <form
+          action={async (formData) => {
+            "use server";
+            await deleteTransaction(formData);
+          }}
+          className="mt-3"
+        >
           <input type="hidden" name="id" value={transaction.id} />
           <Button type="submit" variant="ghost" className="px-0 text-rose-300 hover:text-rose-200">
             Excluir item

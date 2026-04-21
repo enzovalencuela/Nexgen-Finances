@@ -169,7 +169,7 @@ export function DashboardShell({
 
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-6">
-            <Panel className="rounded-[34px] border-white/10 bg-[#0a1220] p-6">
+            <Panel id="overview" className="paper-dots rounded-[34px] border-white/10 bg-[#0a1220] p-6">
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Mapa do Fechamento</p>
@@ -205,6 +205,7 @@ export function DashboardShell({
             </Panel>
 
             <LedgerSection
+              sectionId="entries"
               theme={tapeThemes.entries}
               eyebrow="Entradas"
               title={`Total recebido: ${formatCurrency(totals.entries)}`}
@@ -214,6 +215,7 @@ export function DashboardShell({
             </LedgerSection>
 
             <LedgerSection
+              sectionId="payables"
               theme={tapeThemes.payables}
               eyebrow="A pagar"
               title={`Total a pagar: ${formatCurrency(totals.payables)}`}
@@ -223,6 +225,7 @@ export function DashboardShell({
             </LedgerSection>
 
             <LedgerSection
+              sectionId="receivables"
               theme={tapeThemes.receivables}
               eyebrow="A receber"
               title={`Total a receber: ${formatCurrency(totals.receivables)}`}
@@ -232,6 +235,7 @@ export function DashboardShell({
             </LedgerSection>
 
             <LedgerSection
+              sectionId="expenses"
               theme={tapeThemes.expenses}
               eyebrow="Contas"
               title={`Total gasto: ${formatCurrency(totals.expenses)}`}
@@ -241,6 +245,7 @@ export function DashboardShell({
             </LedgerSection>
 
             <LedgerSection
+              sectionId="investments"
               theme={tapeThemes.investments}
               eyebrow="Investimentos"
               title={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`}
@@ -251,6 +256,14 @@ export function DashboardShell({
           </div>
 
           <div className="space-y-6">
+            <NotebookIndex
+              selectedMonth={selectedMonth}
+              totals={totals}
+              summary={summary}
+              summaryMeta={summaryMeta}
+              investmentOverview={investmentOverview}
+            />
+
             <Panel className="rounded-[34px] border-white/10 bg-[#0a1220] p-6">
               <div className="mb-5 flex items-center gap-3">
                 <div className="rounded-2xl bg-accent/10 p-3 text-accent">
@@ -317,12 +330,14 @@ function MetaStrip({ label, value, tone }: { label: string; value: number; tone:
 }
 
 function LedgerSection({
+  sectionId,
   theme,
   eyebrow,
   title,
   subtitle,
   children
 }: {
+  sectionId: string;
   theme: TapeTheme;
   eyebrow: string;
   title: string;
@@ -330,7 +345,7 @@ function LedgerSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("rounded-[34px] border p-6 shadow-glow", theme.shell)}>
+    <section id={sectionId} className={cn("ledger-paper rounded-[34px] border p-6 shadow-glow", theme.shell)}>
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className={cn("mb-4 h-2 w-24 rounded-full", theme.line)} />
@@ -343,6 +358,72 @@ function LedgerSection({
 
       {children}
     </section>
+  );
+}
+
+function NotebookIndex({
+  selectedMonth,
+  totals,
+  summary,
+  summaryMeta,
+  investmentOverview
+}: {
+  selectedMonth: string;
+  totals: MonthlyStatementData["totals"];
+  summary: Summary | null;
+  summaryMeta: { salaryBase: number; purchaseEstimate: number; investmentWithdrawn: number; noteText: string };
+  investmentOverview: MonthlyStatementData["investmentOverview"];
+}) {
+  const links = [
+    { href: "#overview", label: "Resumo Geral", color: "bg-violet-300" },
+    { href: "#entries", label: "Entradas", color: "bg-cyan-300" },
+    { href: "#payables", label: "A Pagar", color: "bg-yellow-300" },
+    { href: "#receivables", label: "A Receber", color: "bg-sky-300" },
+    { href: "#expenses", label: "Contas", color: "bg-fuchsia-300" },
+    { href: "#investments", label: "Investimentos", color: "bg-emerald-300" }
+  ];
+
+  return (
+    <Panel className="paper-dots rounded-[34px] border-white/10 bg-[#0a1220] p-6">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Indice do mes</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">Caderno {selectedMonth.replace("-", "/")}</h2>
+        </div>
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-300">
+          Leitura rapida
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {links.map((link) => (
+          <a key={link.href} href={link.href} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 transition hover:bg-white/[0.08]">
+            <div className="flex items-center gap-3">
+              <span className={cn("h-3.5 w-3.5 rounded-sm", link.color)} />
+              <span className="text-sm font-medium text-white">{link.label}</span>
+            </div>
+            <span className="text-xs uppercase tracking-[0.24em] text-slate-400">Abrir</span>
+          </a>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-3">
+        <MiniNote label="Salario base" value={formatCurrency(summaryMeta.salaryBase)} />
+        <MiniNote label="Sobra total" value={formatCurrency(totals.leftover)} />
+        <MiniNote label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
+        <MiniNote label="USD investido" value={formatCurrency(investmentOverview.totalUSD, "USD")} />
+        <MiniNote label="Observacao" value={summaryMeta.noteText || "Sem anotacao"} muted />
+      </div>
+    </Panel>
+  );
+}
+
+function MiniNote({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</p>
+      <p className={cn("mt-2 text-sm font-medium", muted ? "text-slate-300" : "text-white")}>{value}</p>
+    </div>
   );
 }
 
