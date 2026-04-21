@@ -10,6 +10,23 @@ type DashboardDataParams = {
   month?: string;
 };
 
+type InvestmentSnapshot = {
+  id: string;
+  userId: string;
+  name: string;
+  ticker: string | null;
+  assetType: AssetType;
+  institution: string | null;
+  quantity: Prisma.Decimal | null;
+  amountBRL: Prisma.Decimal;
+  usdRate: Prisma.Decimal | null;
+  amountUSD: Prisma.Decimal | null;
+  referenceDate: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export async function getDashboardData({ userId, month }: DashboardDataParams): Promise<MonthlyStatementData> {
   const prisma = getPrisma();
   const selectedMonth = month ?? toMonthInput();
@@ -25,7 +42,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investments, summary, creditCards, previousSummary] = await Promise.all([
+  const [transactions, investmentHistory, summary, creditCards, previousSummary] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -39,13 +56,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       where: {
         userId,
         referenceDate: {
-          gte: start,
           lte: end
         }
       },
-      orderBy: {
-        referenceDate: "desc"
-      }
+      orderBy: [{ referenceDate: "desc" }, { updatedAt: "desc" }]
     }),
     prisma.summary.findFirst({
       where: {
@@ -72,6 +86,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   ]);
 
   const typedTransactions = transactions as TransactionWithCard[];
+  const investments = collapseInvestmentHistory(investmentHistory);
   const summaryMeta = parseSummaryMeta(summary?.note);
 
   const persistedEntries = typedTransactions.filter(
@@ -217,6 +232,49 @@ function sortTransactionsByDateDesc(transactions: TransactionWithCard[]) {
 
     return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
   });
+}
+
+function collapseInvestmentHistory(investments: InvestmentSnapshot[]) {
+  const latestByAsset = new Map<string, InvestmentSnapshot>();
+
+  for (const investment of investments) {
+    const key = buildInvestmentKey(investment);
+
+    if (!latestByAsset.has(key)) {
+      latestByAsset.set(key, investment);
+    }
+  }
+
+  return Array.from(latestByAsset.values()).sort((left, right) => {
+    const dateDiff = new Date(right.referenceDate).getTime() - new Date(left.referenceDate).getTime();
+
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
+}
+
+function buildInvestmentKey(investment: {
+  name: string;
+  ticker: string | null;
+  institution: string | null;
+  assetType: AssetType;
+}) {
+  const baseKey = investment.ticker?.trim().length
+    ? normalizeText(investment.ticker)
+    : normalizeText(investment.name);
+
+  return [investment.assetType, baseKey, normalizeText(investment.institution)].join("::");
+}
+
+function normalizeText(value?: string | null) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function groupTransactions(transactions: TransactionWithCard[], preferredOrder: string[]): StatementBucket[] {
