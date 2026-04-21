@@ -10,20 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
-type EntryKind = "income_paid" | "income_pending" | "expense_paid" | "bill_pending";
+type EntryKind = "income_paid" | "income_pending" | "expense_paid" | "bill_pending" | "card_payment";
 
 const entryKindOptions: Array<{ value: EntryKind; label: string }> = [
   { value: "income_paid", label: "Entrada recebida" },
   { value: "income_pending", label: "Valor a receber" },
   { value: "expense_paid", label: "Saida paga" },
-  { value: "bill_pending", label: "Conta a pagar" }
+  { value: "bill_pending", label: "Conta a pagar" },
+  { value: "card_payment", label: "Pagamento de fatura do cartao" }
 ];
 
 const entryKindMap: Record<EntryKind, { type: string; status: string }> = {
   income_paid: { type: "INCOME", status: "PAID" },
   income_pending: { type: "INCOME", status: "PENDING" },
   expense_paid: { type: "EXPENSE", status: "PAID" },
-  bill_pending: { type: "BILL", status: "PENDING" }
+  bill_pending: { type: "BILL", status: "PENDING" },
+  card_payment: { type: "EXPENSE", status: "PAID" }
 };
 
 export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
@@ -31,6 +33,7 @@ export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) 
   const [entryKind, setEntryKind] = useState<EntryKind>("expense_paid");
   const [isCreditCard, setIsCreditCard] = useState(false);
   const resolvedValues = useMemo(() => entryKindMap[entryKind], [entryKind]);
+  const needsCreditCardLink = isCreditCard || entryKind === "card_payment";
 
   return (
     <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
@@ -75,7 +78,7 @@ export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) 
         Movimento no cartao de credito
       </label>
 
-      {isCreditCard ? (
+      {needsCreditCardLink ? (
         <>
           <Select name="creditCardId" defaultValue="" required>
             <option value="">Selecione o cartao</option>
@@ -86,10 +89,17 @@ export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) 
             ))}
           </Select>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input name="installmentCurrent" type="number" min="1" placeholder="Parcela atual" />
-            <Input name="installmentTotal" type="number" min="1" placeholder="Total parcelas" />
-          </div>
+          {isCreditCard ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input name="installmentCurrent" type="number" min="1" placeholder="Parcela atual" />
+              <Input name="installmentTotal" type="number" min="1" placeholder="Total parcelas" />
+            </div>
+          ) : (
+            <>
+              <input type="hidden" name="installmentCurrent" value="" />
+              <input type="hidden" name="installmentTotal" value="" />
+            </>
+          )}
         </>
       ) : (
         <>
@@ -100,7 +110,7 @@ export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) 
       )}
 
       <p className="text-xs text-slate-400">
-        `Valor a receber` cria uma entrada pendente. Para compra parcelada, ligue `Movimento no cartao de credito` e preencha as parcelas. Para pagamento de fatura, use `Saida paga` com o grupo `Cartao` e deixe o checkbox desligado.
+        `Valor a receber` cria uma entrada pendente. Para compra parcelada, ligue `Movimento no cartao de credito` e preencha as parcelas. Para pagamento de fatura, selecione `Pagamento de fatura do cartao`, escolha o cartao e deixe o checkbox desligado.
       </p>
 
       <Button type="submit">Salvar item</Button>
