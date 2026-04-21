@@ -1,4 +1,5 @@
 import { ShieldCheck } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -8,8 +9,8 @@ export function LoginCard() {
   return (
     <Panel className="w-full max-w-md p-8">
       <div className="space-y-6">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/15 text-accent">
-          <ShieldCheck className="h-6 w-6" />
+        <div className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent/10 text-accent">
+          <Image src="/favicon.ico" alt="Nexgen Finance" width={36} height={36} className="h-9 w-9 rounded-lg" />
         </div>
 
         <div className="space-y-2">

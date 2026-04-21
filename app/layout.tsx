@@ -9,7 +9,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Nexgen Finance",
-  description: "Controle financeiro moderno com dashboard, historico e investimentos."
+  description: "Controle financeiro moderno com dashboard, historico e investimentos.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico"
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

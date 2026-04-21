@@ -1,4 +1,5 @@
 import { ArrowDownCircle, ArrowUpCircle, Landmark, Wallet } from "lucide-react";
+import Image from "next/image";
 import { TransactionCategory, type CreditCard, type Investment, type Summary, type Transaction, type User } from "@prisma/client";
 
 import { createCreditCard, createInvestment, createTransaction, upsertSummary } from "@/app/actions";
@@ -74,7 +75,12 @@ export function DashboardShell(props: Props) {
         <Panel className="overflow-hidden bg-grid p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
+              <div className="flex items-center gap-3">
+                <div className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent/10">
+                  <Image src="/favicon.ico" alt="Nexgen Finance" width={30} height={30} className="h-8 w-8 rounded-lg" />
+                </div>
+                <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
+              </div>
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">
                   Visao financeira completa, {user.name?.split(" ")[0] ?? "usuario"}.
