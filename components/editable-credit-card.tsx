@@ -7,15 +7,15 @@ import { Input } from "@/components/ui/input";
 
 export function EditableCreditCard({ creditCard }: { creditCard: CreditCard }) {
   return (
-    <details className="group rounded-2xl border border-white/10 bg-slate-950/20 p-4 open:bg-slate-950/35">
+    <details className="group rounded-xl border border-white/10 bg-[#20252d] p-3 open:bg-[#262c35]">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-medium text-white">{creditCard.name}</p>
-            <p className="text-sm text-slate-300">{creditCard.brand ?? "Sem bandeira"}</p>
+            <p className="text-[13px] font-medium text-white">{creditCard.name}</p>
+            <p className="text-[12px] text-slate-400">{creditCard.brand ?? "Sem bandeira"}</p>
           </div>
 
-          <div className="text-right text-sm text-slate-300">
+          <div className="text-right text-[12px] text-slate-400">
             Fecha dia {creditCard.closingDay ?? "-"} • vence dia {creditCard.dueDay ?? "-"}
           </div>
         </div>

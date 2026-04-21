@@ -2,14 +2,14 @@ import { NotebookText } from "lucide-react";
 import type { User } from "@prisma/client";
 
 import { AppShell } from "@/components/app-shell";
-import { CreditCardList, BucketList, InvestmentList, TransactionList } from "@/components/finance-lists";
+import { BucketList, CreditCardList, InvestmentList, TransactionList } from "@/components/finance-lists";
 import { CreditCardForm, InvestmentForm, SummaryForm } from "@/components/finance-forms";
 import { ClassificationPieChart } from "@/components/monthly-charts";
 import { TransactionForm } from "@/components/transaction-form";
 import { Panel } from "@/components/ui/panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { MonthlyStatementData } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
@@ -42,74 +42,56 @@ export function MonthlyClosurePage({
       user={user}
       selectedMonth={selectedMonth}
       currentPath="/fechamento"
-      title="Fechamento mensal organizado como caderno, sem misturar cartão com o restante"
-      description="Aqui fica o fechamento do mês: entradas, a pagar, a receber, contas, investimentos e fechamento final. A operação de fatura foi separada para a página de Cartões."
+      title="Fechamento do mês"
+      description="Leitura direta dos blocos do seu fechamento, com edição rápida e sem cara de dashboard."
     >
-      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="space-y-6">
-          <ClosureSection eyebrow="Entradas" title={`Total recebido: ${formatCurrency(totals.entries)}`} description="Entradas efetivamente recebidas no mês, incluindo o saldo automático do mês anterior quando existir.">
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <WorkSection title={`Entradas • ${formatCurrency(totals.entries)}`}>
             <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={sectionThemes.entries} />
-          </ClosureSection>
+          </WorkSection>
 
-          <ClosureSection eyebrow="A pagar" title={`Total a pagar: ${formatCurrency(totals.payables)}`} description="Pendências gerais do mês. A leitura detalhada da fatura foi separada em Cartões.">
+          <WorkSection title={`A pagar • ${formatCurrency(totals.payables)}`}>
             <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste período." creditCards={creditCards} accentClass={sectionThemes.payables} />
-          </ClosureSection>
+          </WorkSection>
 
-          <ClosureSection eyebrow="A receber" title={`Total a receber: ${formatCurrency(totals.receivables)}`} description="Valores prometidos, mas ainda não recebidos.">
+          <WorkSection title={`A receber • ${formatCurrency(totals.receivables)}`}>
             <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste período." creditCards={creditCards} accentClass={sectionThemes.receivables} />
-          </ClosureSection>
+          </WorkSection>
 
-          <ClosureSection eyebrow="Contas" title={`Total gasto: ${formatCurrency(totals.expenses)}`} description="Saídas já pagas no mês, agrupadas do jeito que você acompanha no dia a dia.">
+          <WorkSection title={`Contas • ${formatCurrency(totals.expenses)}`}>
             <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste período." creditCards={creditCards} accentClass={sectionThemes.expenses} />
-          </ClosureSection>
+          </WorkSection>
 
-          <ClosureSection eyebrow="Investimentos" title={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} description="Posição consolidada dos investimentos com continuidade entre meses.">
+          <WorkSection title={`Investimentos • ${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} className="lg:col-span-2">
             <InvestmentList investments={investments} />
-          </ClosureSection>
+          </WorkSection>
         </div>
 
-        <div className="space-y-6">
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-accent/10 p-3 text-accent">
-                <NotebookText className="h-5 w-5" />
-              </div>
-              <div>
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-accent/80">Conferência</p>
-                  <h2 className="mt-1 text-xl font-semibold text-white">Painel do fechamento</h2>
-              </div>
+        <div className="space-y-3">
+          <Panel>
+            <div className="flex items-center gap-2">
+              <NotebookText className="h-4 w-4 text-slate-400" />
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Resumo</p>
             </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <MiniStat label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
-              <MiniStat label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
-              <MiniStat label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
-              <MiniStat label="Sobra total" value={formatCurrency(totals.leftover)} />
-            </div>
-
-            <div className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-              <SectionHeading eyebrow="Classificação" title="Mapa visual dos gastos" description="Distribuição por tipo para bater com a leitura do seu fechamento." />
-              <div className="mt-5">
-                <ClassificationPieChart
-                  necessary={classificationTotals.necessary}
-                  optional={classificationTotals.optional}
-                  leisure={classificationTotals.leisure}
-                  investment={classificationTotals.investment}
-                />
-              </div>
+            <div className="mt-3 grid gap-2">
+              <InfoLine label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
+              <InfoLine label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
+              <InfoLine label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
+              <InfoLine label="Sobra total" value={formatCurrency(totals.leftover)} />
             </div>
           </Panel>
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Lançamentos" title="Novo item de fluxo geral" description="Use este formulário para entradas, contas pagas, valores a receber e pendências gerais fora da fatura." />
-            <div className="mt-5">
+          <Panel>
+            <SectionHeading eyebrow="Lançar" title="Novo item" description="Entradas, contas pagas, valores a receber e pendências gerais." />
+            <div className="mt-3">
               <TransactionForm creditCards={creditCards} mode="general" />
             </div>
           </Panel>
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Fechamento" title="Resumo do mês" description="Registre os números finais do mês e as observações do caderno." />
-            <div className="mt-5">
+          <Panel>
+            <SectionHeading eyebrow="Fechar" title="Resumo do mês" description="Números finais e observações do fechamento." />
+            <div className="mt-3">
               <SummaryForm
                 selectedMonth={selectedMonth}
                 summary={summary ? { cashBalance: Number(summary.cashBalance ?? 0), digitalBalance: Number(summary.digitalBalance ?? 0) } : null}
@@ -118,18 +100,30 @@ export function MonthlyClosurePage({
             </div>
           </Panel>
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Investimentos" title="Atualizar posição" description="Cadastre um novo investimento ou ajuste uma posição já existente." />
-            <div className="mt-5">
+          <Panel>
+            <SectionHeading eyebrow="Investimentos" title="Atualizar posição" description="Cadastro rápido de posição e ajuste." />
+            <div className="mt-3">
               <InvestmentForm />
             </div>
           </Panel>
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Cartões cadastrados" title="Cadastro rápido" description="O gerenciamento detalhado de fatura fica em Cartões, mas o cadastro básico continua acessível aqui." />
-            <div className="mt-5 space-y-4">
+          <Panel>
+            <SectionHeading eyebrow="Cartões" title="Cadastro" description="Cadastro básico de cartão, fechamento e vencimento." />
+            <div className="mt-3 space-y-3">
               <CreditCardForm />
               <CreditCardList creditCards={creditCards} />
+            </div>
+          </Panel>
+
+          <Panel>
+            <SectionHeading eyebrow="Classificação" title="Distribuição dos gastos" description="Apenas para conferência visual rápida." />
+            <div className="mt-3 rounded-xl border border-white/10 bg-[#20252d] p-3">
+              <ClassificationPieChart
+                necessary={classificationTotals.necessary}
+                optional={classificationTotals.optional}
+                leisure={classificationTotals.leisure}
+                investment={classificationTotals.investment}
+              />
             </div>
           </Panel>
         </div>
@@ -138,24 +132,22 @@ export function MonthlyClosurePage({
   );
 }
 
-function ClosureSection({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
+function WorkSection({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className="ledger-paper rounded-[34px] border border-white/10 bg-[#0a1220] p-6 shadow-glow">
-      <div className="mb-5 space-y-2">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-accent/80">{eyebrow}</p>
-        <h2 className="text-xl font-semibold text-white">{title}</h2>
-        <p className="max-w-3xl text-[13px] leading-6 text-slate-300">{description}</p>
+    <Panel className={className}>
+      <div className="border-b border-white/10 pb-3">
+        <h2 className="text-[15px] font-semibold text-white">{title}</h2>
       </div>
-      {children}
-    </section>
+      <div className="mt-3">{children}</div>
+    </Panel>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+function InfoLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className={cn("rounded-3xl border border-white/10 bg-white/[0.03] px-5 py-4")}>
-      <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{label}</p>
-      <p className="mt-3 text-lg font-semibold text-white">{value}</p>
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#20252d] px-3 py-2.5">
+      <span className="text-[12px] text-slate-400">{label}</span>
+      <span className="text-[13px] font-medium text-white">{value}</span>
     </div>
   );
 }

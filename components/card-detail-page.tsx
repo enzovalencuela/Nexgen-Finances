@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarRange, CreditCard, ReceiptText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { CreditCard as CreditCardModel, User } from "@prisma/client";
 
@@ -24,14 +24,6 @@ const statusLabels = {
   overdue: "Em atraso"
 } as const;
 
-const statusClasses = {
-  empty: "text-slate-300 bg-white/[0.04] border-white/10",
-  paid: "text-emerald-200 bg-emerald-500/10 border-emerald-400/20",
-  partial: "text-sky-200 bg-sky-500/10 border-sky-400/20",
-  open: "text-yellow-100 bg-yellow-500/10 border-yellow-300/20",
-  overdue: "text-amber-200 bg-amber-500/10 border-amber-300/20"
-} as const;
-
 export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices, selectedCard, timeline }: Props) {
   const activeInvoice = cardInvoices.find((invoice) => invoice.creditCard.id === selectedCard.id) ?? timeline[0] ?? null;
 
@@ -40,38 +32,34 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
       user={user}
       selectedMonth={selectedMonth}
       currentPath="/cartoes"
-      title={`Cartão ${selectedCard.name} com leitura por ciclo de fatura`}
-      description="Esta tela mostra a fatura atual do cartão, a linha do tempo recente dos ciclos e os detalhes de compras, parcelas, atrasados e pagamentos do mesmo cartão."
+      title={`Cartão ${selectedCard.name}`}
+      description="Detalhe do cartão com ciclo atual, histórico recente e formulários diretos de compra e pagamento."
     >
       <section className="flex items-center gap-3">
-        <Link href={`/cartoes?month=${selectedMonth}`} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-[13px] text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+        <Link href={`/cartoes?month=${selectedMonth}`} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#20252d] px-3 py-2 text-[13px] text-slate-300 transition hover:bg-[#262c35] hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Voltar para cartões
         </Link>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
-        <div className="space-y-6">
-          {activeInvoice ? <CurrentInvoiceHero invoice={activeInvoice} /> : null}
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_330px]">
+        <div className="space-y-3">
+          {activeInvoice ? <CurrentInvoiceBlock invoice={activeInvoice} /> : null}
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Linha do tempo" title="Últimos ciclos de fatura" description="Veja como a fatura deste cartão evoluiu nos últimos meses." />
-            <div className="mt-5 grid gap-3">
+          <Panel>
+            <SectionHeading eyebrow="Histórico" title="Últimos ciclos de fatura" description="Leitura simples da evolução da fatura nos últimos meses." />
+            <div className="mt-3 divide-y divide-white/10 rounded-xl border border-white/10 bg-[#20252d]">
               {timeline.map((invoice) => (
-                <div key={`${invoice.creditCard.id}-${invoice.monthReference}`} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-[13px] font-semibold text-white">{invoice.monthLabel}</p>
-                      <p className="mt-1 text-[13px] text-slate-400">
-                        Fechamento {invoice.closingDate ? formatDate(invoice.closingDate) : "-"} • vencimento {invoice.dueDate ? formatDate(invoice.dueDate) : "-"}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className={cn("rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]", statusClasses[invoice.status])}>
-                        {statusLabels[invoice.status]}
-                      </span>
-                      <span className="text-[13px] font-semibold text-white">{formatCurrency(invoice.invoiceTotal)}</span>
-                    </div>
+                <div key={`${invoice.creditCard.id}-${invoice.monthReference}`} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-[13px] font-medium text-white">{invoice.monthLabel}</p>
+                    <p className="mt-1 text-[12px] text-slate-400">
+                      Fechamento {invoice.closingDate ? formatDate(invoice.closingDate) : "-"} • vencimento {invoice.dueDate ? formatDate(invoice.dueDate) : "-"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]", invoice.status === "overdue" ? "border-amber-300/20 bg-amber-500/10 text-amber-200" : invoice.status === "paid" ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200" : "border-white/10 bg-white/[0.04] text-slate-300")}>{statusLabels[invoice.status]}</span>
+                    <span className="text-[13px] font-medium text-white">{formatCurrency(invoice.invoiceTotal)}</span>
                   </div>
                 </div>
               ))}
@@ -79,17 +67,17 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
           </Panel>
 
           {activeInvoice ? (
-            <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-              <SectionHeading eyebrow="Detalhe" title="Composição da fatura atual" description="Os grupos abaixo explicam exatamente o que está compondo a fatura deste cartão." />
-              <div className="mt-5 grid gap-4">
+            <Panel>
+              <SectionHeading eyebrow="Composição" title="O que forma a fatura atual" description="Separação direta do que está compondo a fatura deste cartão." />
+              <div className="mt-3 grid gap-3 lg:grid-cols-2">
                 {activeInvoice.sections.map((section) => (
-                  <div key={section.key} className="rounded-[26px] border border-white/10 bg-white/[0.03] p-4">
-                    <div className="mb-4 flex flex-col gap-2 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div key={section.key} className="rounded-xl border border-white/10 bg-[#20252d] p-3">
+                    <div className="mb-3 flex items-start justify-between gap-3 border-b border-white/10 pb-2">
                       <div>
-                        <h3 className="text-base font-semibold text-white">{section.title}</h3>
-                        <p className="text-[13px] text-slate-400">{section.description}</p>
+                        <h3 className="text-[13px] font-semibold text-white">{section.title}</h3>
+                        <p className="mt-1 text-[12px] text-slate-400">{section.description}</p>
                       </div>
-                      <p className={cn("text-base font-semibold", section.key === "overdue" ? "text-amber-200" : section.key === "payments" ? "text-emerald-200" : "text-white")}>{formatCurrency(section.total)}</p>
+                      <span className={cn("text-[13px] font-medium", section.key === "overdue" ? "text-amber-200" : section.key === "payments" ? "text-emerald-200" : "text-white")}>{formatCurrency(section.total)}</span>
                     </div>
                     <TransactionList
                       items={section.items}
@@ -105,17 +93,17 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
           ) : null}
         </div>
 
-        <div className="space-y-6">
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Nova compra" title={`Comprar com ${selectedCard.name}`} description="Esse formulário já deixa o cartão predefinido e salva a compra direto na fatura dele." />
-            <div className="mt-5">
+        <div className="space-y-3">
+          <Panel>
+            <SectionHeading eyebrow="Compra" title={`Comprar com ${selectedCard.name}`} description="Lançamento direto de compra para este cartão." />
+            <div className="mt-3">
               <TransactionForm creditCards={[selectedCard]} mode="cardPurchase" />
             </div>
           </Panel>
 
-          <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-            <SectionHeading eyebrow="Pagamento" title={`Pagar ${selectedCard.name}`} description="Registre aqui os pagamentos desta fatura para abater o saldo aberto do cartão." />
-            <div className="mt-5">
+          <Panel>
+            <SectionHeading eyebrow="Pagamento" title={`Pagar ${selectedCard.name}`} description="Abate o saldo aberto da fatura deste cartão." />
+            <div className="mt-3">
               <TransactionForm creditCards={[selectedCard]} mode="cardPayment" />
             </div>
           </Panel>
@@ -125,57 +113,28 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
   );
 }
 
-function CurrentInvoiceHero({ invoice }: { invoice: CardInvoiceView }) {
+function CurrentInvoiceBlock({ invoice }: { invoice: CardInvoiceView }) {
   return (
-    <Panel className="rounded-[32px] border-white/10 bg-[#0a1220] p-6">
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-accent/10 p-3 text-accent">
-              <CreditCard className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-accent/80">Fatura atual</p>
-              <h2 className="mt-1 text-xl font-semibold text-white">{invoice.monthLabel}</h2>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <StatusBadge status={invoice.status} />
-            <StatusInfo icon={CalendarRange} label="Fechamento" value={invoice.closingDate ? formatDate(invoice.closingDate) : "-"} />
-            <StatusInfo icon={ReceiptText} label="Vencimento" value={invoice.dueDate ? formatDate(invoice.dueDate) : "-"} />
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <ValueBox label="Fatura atual" value={formatCurrency(invoice.invoiceTotal)} accent />
-          <ValueBox label="Compras abertas" value={formatCurrency(invoice.openChargesTotal)} />
-          <ValueBox label="Em atraso" value={formatCurrency(invoice.overdueTotal)} warning={invoice.overdueTotal > 0} />
-          <ValueBox label="Pagamentos" value={formatCurrency(invoice.paymentsTotal)} success={invoice.paymentsTotal > 0} />
-        </div>
+    <Panel>
+      <SectionHeading eyebrow="Fatura atual" title={invoice.monthLabel} description="Resumo do ciclo atual do cartão." />
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <InfoBox label="Status" value={statusLabels[invoice.status]} warning={invoice.status === "overdue"} />
+        <InfoBox label="Fatura" value={formatCurrency(invoice.invoiceTotal)} />
+        <InfoBox label="Fechamento" value={invoice.closingDate ? formatDate(invoice.closingDate) : "-"} />
+        <InfoBox label="Vencimento" value={invoice.dueDate ? formatDate(invoice.dueDate) : "-"} />
+        <InfoBox label="Compras abertas" value={formatCurrency(invoice.openChargesTotal)} />
+        <InfoBox label="Atrasado" value={formatCurrency(invoice.overdueTotal)} warning={invoice.overdueTotal > 0} />
+        <InfoBox label="Pagamentos" value={formatCurrency(invoice.paymentsTotal)} success={invoice.paymentsTotal > 0} />
       </div>
     </Panel>
   );
 }
 
-function StatusBadge({ status }: { status: CardInvoiceView["status"] }) {
-  return <span className={cn("rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]", statusClasses[status])}>{statusLabels[status]}</span>;
-}
-
-function StatusInfo({ icon: Icon, label, value }: { icon: typeof CalendarRange; label: string; value: string }) {
+function InfoBox({ label, value, warning, success }: { label: string; value: string; warning?: boolean; success?: boolean }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[13px] text-slate-300">
-      <Icon className="h-4 w-4 text-accent" />
-      {label}: {value}
-    </div>
-  );
-}
-
-function ValueBox({ label, value, accent, warning, success }: { label: string; value: string; accent?: boolean; warning?: boolean; success?: boolean }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
-      <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</p>
-      <p className={cn("mt-2 text-sm font-semibold", accent ? "text-accent" : warning ? "text-amber-200" : success ? "text-emerald-200" : "text-white")}>{value}</p>
+    <div className="rounded-xl border border-white/10 bg-[#20252d] px-3 py-2.5">
+      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <p className={cn("mt-1 text-[13px] font-medium", warning ? "text-amber-200" : success ? "text-emerald-200" : "text-white")}>{value}</p>
     </div>
   );
 }

@@ -6,7 +6,7 @@ export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "rounded-3xl border border-border bg-panel/85 p-5 shadow-glow backdrop-blur-xl",
+        "rounded-2xl border border-white/10 bg-[#171b21] p-4 shadow-none",
         className
       )}
       {...props}

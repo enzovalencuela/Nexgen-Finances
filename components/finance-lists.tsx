@@ -21,7 +21,7 @@ export function TransactionList({
   compact?: boolean;
 }) {
   if (items.length === 0) {
-    return <p className="text-sm text-slate-300">{emptyMessage}</p>;
+    return <p className="text-[13px] text-slate-400">{emptyMessage}</p>;
   }
 
   return (
@@ -45,16 +45,16 @@ export function BucketList({
   accentClass: string;
 }) {
   if (buckets.length === 0) {
-    return <p className="text-sm text-slate-300">{emptyMessage}</p>;
+    return <p className="text-[13px] text-slate-400">{emptyMessage}</p>;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {buckets.map((bucket) => (
-        <div key={bucket.key} className="rounded-[26px] border border-white/10 bg-slate-950/15 p-4">
-          <div className="mb-4 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-            <h3 className="text-lg font-semibold text-white">{bucket.label}</h3>
-            <p className={cn("text-lg font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
+        <div key={bucket.key} className="rounded-xl border border-white/10 bg-[#20252d] p-3">
+          <div className="mb-3 flex items-center justify-between gap-4 border-b border-white/10 pb-2">
+            <h3 className="text-[13px] font-semibold text-white">{bucket.label}</h3>
+            <p className={cn("text-[13px] font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
           </div>
           <TransactionList items={bucket.items} emptyMessage="Nenhum item." creditCards={creditCards} accentClass={accentClass} compact />
         </div>

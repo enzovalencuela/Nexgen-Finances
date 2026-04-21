@@ -27,25 +27,25 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
     const isCarryover = transaction.derivedKind === "carryover";
 
     return (
-      <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/5 p-4">
+      <div className="rounded-xl border border-white/10 bg-[#20252d] p-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-medium text-white">{transaction.title}</p>
-              <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                {isCarryover ? "Automático" : "Parcela automática"}
-              </span>
-            </div>
-            <p className="text-sm text-slate-300">
+                <p className="text-[13px] font-medium text-white">{transaction.title}</p>
+                <span className="rounded-full border border-white/10 bg-[#262c35] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                  {isCarryover ? "Automático" : "Parcela automática"}
+                </span>
+              </div>
+            <p className="text-[12px] text-slate-400">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
               {!isCarryover && transaction.installmentCurrent && transaction.installmentTotal ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}` : ""}
             </p>
-            <p className="mt-2 text-xs text-slate-400">{transaction.description}</p>
+            <p className="mt-2 text-[11px] text-slate-500">{transaction.description}</p>
           </div>
 
           <div className="text-right">
-            <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
+            <p className="text-[13px] font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
             <p className={`text-[11px] font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automática" : "Cobrança futura automática"}</p>
           </div>
         </div>
@@ -54,19 +54,19 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
   }
 
   return (
-    <details className="group rounded-2xl border border-white/10 bg-slate-950/20 p-4 open:bg-slate-950/35">
+    <details className="group rounded-xl border border-white/10 bg-[#20252d] p-3 open:bg-[#262c35]">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-medium text-white">{transaction.title}</p>
+               <p className="text-[13px] font-medium text-white">{transaction.title}</p>
               {isOverdueCardBill || isOverdueReceivable ? (
                 <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
                   {isOverdueReceivable ? "Pendente" : "Atrasado"}
                 </span>
               ) : null}
             </div>
-            <p className="text-[13px] text-slate-300">
+            <p className="text-[12px] text-slate-400">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
               {transaction.isCreditCard && transaction.installmentCurrent && transaction.installmentTotal
@@ -78,7 +78,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           </div>
 
           <div className="text-right">
-            <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
+            <p className="text-[13px] font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
             <p className={`text-xs font-medium ${accentClass}`}>{isOverdueCardBill ? "Atrasado" : isOverdueReceivable ? "Pendente" : transactionStatusLabels[transaction.status]}</p>
           </div>
         </div>

@@ -12,20 +12,20 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
   const defaultDate = new Date(investment.referenceDate).toISOString().slice(0, 10);
 
   return (
-    <details className="group rounded-2xl border border-white/10 bg-slate-950/20 p-4 open:bg-slate-950/35">
+    <details className="group rounded-xl border border-white/10 bg-[#20252d] p-3 open:bg-[#262c35]">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-medium text-white">{investment.name}</p>
-            <p className="text-sm text-slate-300">
+            <p className="text-[13px] font-medium text-white">{investment.name}</p>
+            <p className="text-[12px] text-slate-400">
               {assetTypeLabels[investment.assetType]}
               {investment.institution ? ` • ${investment.institution}` : ""}
             </p>
           </div>
 
           <div className="text-right">
-            <p className="font-semibold text-white">{formatCurrency(Number(investment.amountBRL))}</p>
-            <p className="text-xs text-slate-300">
+            <p className="text-[13px] font-semibold text-white">{formatCurrency(Number(investment.amountBRL))}</p>
+            <p className="text-[11px] text-slate-400">
               {investment.amountUSD ? formatCurrency(Number(investment.amountUSD), "USD") : "Sem valor em USD"}
             </p>
           </div>

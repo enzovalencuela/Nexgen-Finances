@@ -7,12 +7,12 @@
 }
 
 html {
-  background: #070b14;
+  background: #101317;
 }
 
 body {
   min-height: 100vh;
-  background-image: radial-gradient(circle at top, rgba(98, 228, 181, 0.08), transparent 28%), linear-gradient(180deg, rgba(15, 23, 40, 0.98) 0%, rgba(7, 11, 20, 1) 100%);
+  background: #101317;
   color: #e5eefb;
 }
 
@@ -22,21 +22,11 @@ a {
 }
 
 .ledger-paper {
-  background-image:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.022)),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(148, 163, 184, 0.11) 0,
-      rgba(148, 163, 184, 0.11) 1px,
-      transparent 1px,
-      transparent 38px
-    );
-  background-size: 100% 100%, 100% 39px;
+  background: #171b21;
 }
 
 .paper-dots {
-  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.16) 1px, transparent 0);
-  background-size: 18px 18px;
+  background: #171b21;
 }
 
 * {
