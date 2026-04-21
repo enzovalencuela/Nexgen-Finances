@@ -5,7 +5,9 @@ import type { CreditCard, Investment, Summary, User } from "@prisma/client";
 import { createCreditCard, createInvestment, createTransaction, upsertSummary } from "@/app/actions";
 import { assetTypeLabels, transactionCategoryLabels, transactionStatusLabels, transactionTypeLabels } from "@/lib/constants";
 import type { MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { EditableInvestmentCard } from "@/components/editable-investment-card";
+import { EditableTransactionCard } from "@/components/editable-transaction-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Panel } from "@/components/ui/panel";
@@ -16,6 +18,29 @@ import { SignOutButton } from "@/components/sign-out-button";
 type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
 };
+
+const sectionThemes = {
+  entries: {
+    panel: "border-cyan-400/30 bg-cyan-500/5",
+    total: "text-cyan-300"
+  },
+  payables: {
+    panel: "border-yellow-300/30 bg-yellow-400/5",
+    total: "text-yellow-200"
+  },
+  receivables: {
+    panel: "border-sky-400/30 bg-sky-500/5",
+    total: "text-sky-300"
+  },
+  expenses: {
+    panel: "border-fuchsia-400/30 bg-fuchsia-500/5",
+    total: "text-fuchsia-300"
+  },
+  investments: {
+    panel: "border-emerald-400/30 bg-emerald-500/5",
+    total: "text-emerald-300"
+  }
+} as const;
 
 const overviewCards = [
   { key: "entries", label: "Entradas", icon: ArrowUpCircle, color: "text-accent" },
@@ -120,6 +145,8 @@ export function DashboardShell({
               description={`Total recebido: ${formatCurrency(totals.entries)}`}
               items={entries}
               emptyMessage="Nenhuma entrada registrada neste periodo."
+              creditCards={creditCards}
+              theme={sectionThemes.entries}
             />
 
             <BucketSection
@@ -128,6 +155,8 @@ export function DashboardShell({
               description={`Total a pagar: ${formatCurrency(totals.payables)}`}
               buckets={payableBuckets}
               emptyMessage="Nenhum valor pendente neste periodo."
+              creditCards={creditCards}
+              theme={sectionThemes.payables}
             />
 
             <BucketSection
@@ -136,16 +165,18 @@ export function DashboardShell({
               description={`Total a receber: ${formatCurrency(totals.receivables)}`}
               buckets={receivableBuckets}
               emptyMessage="Nenhum valor a receber neste periodo."
+              creditCards={creditCards}
+              theme={sectionThemes.receivables}
             />
 
-            <Panel className="space-y-5">
+            <Panel className={cn("space-y-5", sectionThemes.expenses.panel)}>
               <SectionHeading
                 eyebrow="Contas"
                 title="Gastos efetivos do mes"
                 description={`Total de contas do mes: ${formatCurrency(totals.expenses)}`}
               />
 
-              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste periodo." />
+              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste periodo." creditCards={creditCards} accentClass={sectionThemes.expenses.total} />
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <SummaryMetric label="Gastos Necessarios" value={classificationTotals.necessary} subtle />
@@ -155,7 +186,7 @@ export function DashboardShell({
               </div>
             </Panel>
 
-            <Panel className="space-y-5">
+            <Panel className={cn("space-y-5", sectionThemes.investments.panel)}>
               <SectionHeading
                 eyebrow="Investimentos"
                 title="Carteira do mes"
@@ -253,18 +284,22 @@ function MonthlySection({
   title,
   description,
   items,
-  emptyMessage
+  emptyMessage,
+  creditCards,
+  theme
 }: {
   eyebrow: string;
   title: string;
   description: string;
   items: TransactionWithCard[];
   emptyMessage: string;
+  creditCards: CreditCard[];
+  theme: { panel: string; eyebrow: string; total: string };
 }) {
   return (
-    <Panel className="space-y-5">
+    <Panel className={cn("space-y-5", theme.panel)}>
       <SectionHeading eyebrow={eyebrow} title={title} description={description} />
-      <TransactionList items={items} emptyMessage={emptyMessage} />
+      <TransactionList items={items} emptyMessage={emptyMessage} creditCards={creditCards} accentClass={theme.total} />
     </Panel>
   );
 }
@@ -274,23 +309,37 @@ function BucketSection({
   title,
   description,
   buckets,
-  emptyMessage
+  emptyMessage,
+  creditCards,
+  theme
 }: {
   eyebrow: string;
   title: string;
   description: string;
   buckets: StatementBucket[];
   emptyMessage: string;
+  creditCards: CreditCard[];
+  theme: { panel: string; eyebrow: string; total: string };
 }) {
   return (
-    <Panel className="space-y-5">
+    <Panel className={cn("space-y-5", theme.panel)}>
       <SectionHeading eyebrow={eyebrow} title={title} description={description} />
-      <BucketList buckets={buckets} emptyMessage={emptyMessage} />
+      <BucketList buckets={buckets} emptyMessage={emptyMessage} creditCards={creditCards} accentClass={theme.total} />
     </Panel>
   );
 }
 
-function BucketList({ buckets, emptyMessage }: { buckets: StatementBucket[]; emptyMessage: string }) {
+function BucketList({
+  buckets,
+  emptyMessage,
+  creditCards,
+  accentClass
+}: {
+  buckets: StatementBucket[];
+  emptyMessage: string;
+  creditCards: CreditCard[];
+  accentClass: string;
+}) {
   if (buckets.length === 0) {
     return <p className="text-sm text-muted">{emptyMessage}</p>;
   }
@@ -301,16 +350,28 @@ function BucketList({ buckets, emptyMessage }: { buckets: StatementBucket[]; emp
         <div key={bucket.key} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
           <div className="mb-4 flex items-center justify-between gap-4 border-b border-white/8 pb-4">
             <h3 className="text-lg font-semibold text-white">{bucket.label}</h3>
-            <p className="text-base font-semibold text-accent">{formatCurrency(bucket.total)}</p>
+            <p className={cn("text-base font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
           </div>
-          <TransactionList items={bucket.items} emptyMessage="Nenhum item." compact />
+          <TransactionList items={bucket.items} emptyMessage="Nenhum item." creditCards={creditCards} accentClass={accentClass} compact />
         </div>
       ))}
     </div>
   );
 }
 
-function TransactionList({ items, emptyMessage, compact = false }: { items: TransactionWithCard[]; emptyMessage: string; compact?: boolean }) {
+function TransactionList({
+  items,
+  emptyMessage,
+  creditCards,
+  accentClass,
+  compact = false
+}: {
+  items: TransactionWithCard[];
+  emptyMessage: string;
+  creditCards: CreditCard[];
+  accentClass: string;
+  compact?: boolean;
+}) {
   if (items.length === 0) {
     return <p className="text-sm text-muted">{emptyMessage}</p>;
   }
@@ -318,26 +379,7 @@ function TransactionList({ items, emptyMessage, compact = false }: { items: Tran
   return (
     <div className="space-y-3">
       {items.map((transaction) => (
-        <div key={transaction.id} className={cn("rounded-2xl border border-white/8 bg-white/[0.02]", compact ? "p-3" : "p-4")}>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-medium text-white">{transaction.title}</p>
-              <p className="text-sm text-muted">
-                {transaction.source ? `${transaction.source} • ` : ""}
-                {formatDate(transaction.transactionDate)}
-                {transaction.isCreditCard && transaction.installmentCurrent && transaction.installmentTotal
-                  ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
-                  : ""}
-              </p>
-              {transaction.description ? <p className="mt-1 text-xs text-muted">{transaction.description}</p> : null}
-            </div>
-
-            <div className="text-right">
-              <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
-              <p className="text-xs text-muted">{transactionStatusLabels[transaction.status]}</p>
-            </div>
-          </div>
-        </div>
+        <EditableTransactionCard key={transaction.id} transaction={transaction} creditCards={creditCards} accentClass={accentClass} compact={compact} />
       ))}
     </div>
   );
@@ -487,27 +529,7 @@ function InvestmentList({ investments }: { investments: Investment[] }) {
   return (
     <div className="space-y-3">
       {investments.map((investment) => (
-        <div key={investment.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-medium text-white">
-                {investment.name}
-                {investment.ticker ? <span className="text-muted"> • {investment.ticker}</span> : null}
-              </p>
-              <p className="text-sm text-muted">
-                {assetTypeLabels[investment.assetType]}
-                {investment.institution ? ` • ${investment.institution}` : ""}
-              </p>
-            </div>
-
-            <div className="text-right">
-              <p className="font-medium text-white">{formatCurrency(Number(investment.amountBRL))}</p>
-              <p className="text-sm text-muted">
-                {investment.amountUSD ? formatCurrency(Number(investment.amountUSD), "USD") : "Sem conversao USD"}
-              </p>
-            </div>
-          </div>
-        </div>
+        <EditableInvestmentCard key={investment.id} investment={investment} />
       ))}
     </div>
   );
