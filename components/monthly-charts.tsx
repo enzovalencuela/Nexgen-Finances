@@ -22,6 +22,11 @@ type ClassificationChartProps = {
 const overviewColors = ["#4ade80", "#facc15", "#38bdf8", "#f472b6", "#a78bfa"];
 const classificationColors = ["#9333ea", "#06b6d4", "#39ff14", "#d1d5db"];
 
+function tooltipFormatter(value: number | string | undefined) {
+  const normalized = typeof value === "number" ? value : Number(value ?? 0);
+  return [formatCurrency(normalized), "Valor"] as [string, string];
+}
+
 export function OverviewBarChart(props: OverviewChartProps) {
   const data = [
     { name: "Entradas", value: props.entries },
@@ -44,7 +49,7 @@ export function OverviewBarChart(props: OverviewChartProps) {
               borderRadius: 18,
               color: "#fff"
             }}
-            formatter={(value: number) => [formatCurrency(value), "Valor"]}
+            formatter={tooltipFormatter}
           />
           <Bar dataKey="value" radius={[16, 16, 0, 0]}>
             {data.map((entry, index) => (
@@ -81,7 +86,7 @@ export function ClassificationPieChart(props: ClassificationChartProps) {
                 borderRadius: 18,
                 color: "#fff"
               }}
-              formatter={(value: number) => [formatCurrency(value), "Valor"]}
+              formatter={tooltipFormatter}
             />
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={92} paddingAngle={4}>
               {data.map((entry, index) => (
