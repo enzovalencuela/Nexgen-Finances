@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  INVESTMENT
+  BILL
+}
+
+enum TransactionCategory {
+  NECESSARY
+  LEISURE
+  INVESTMENT
+  HOUSING
+  TRANSPORT
+  FOOD
+  HEALTH
+  EDUCATION
+  UTILITIES
+  OTHER
+}
+
+enum TransactionStatus {
+  PAID
+  PENDING
+}
+
+enum AssetType {
+  CDB
+  LCI
+  FUND
+  CRYPTO
+  ETF
+  STOCK
+  OTHER
+}
+
+model User {
+  id             String         @id @default(cuid())
+  name           String?
+  email          String?        @unique
+  emailVerified  DateTime?
+  image          String?
+  accounts       Account[]
+  sessions       Session[]
+  transactions   Transaction[]
+  creditCards    CreditCard[]
+  investments    Investment[]
+  summaries      Summary[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Transaction {
+  id                 String              @id @default(cuid())
+  userId             String
+  title              String
+  description        String?
+  type               TransactionType
+  category           TransactionCategory
+  amount             Decimal             @db.Decimal(12, 2)
+  transactionDate    DateTime
+  status             TransactionStatus   @default(PAID)
+  source             String?
+  isCreditCard       Boolean             @default(false)
+  installmentCurrent Int?
+  installmentTotal   Int?
+  creditCardId       String?
+  creditCard         CreditCard?         @relation(fields: [creditCardId], references: [id], onDelete: SetNull)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([userId, transactionDate])
+  @@index([userId, type, category])
+}
+
+model CreditCard {
+  id             String        @id @default(cuid())
+  userId         String
+  name           String
+  brand          String?
+  closingDay     Int?
+  dueDay         Int?
+  note           String?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model Investment {
+  id               String      @id @default(cuid())
+  userId           String
+  name             String
+  ticker           String?
+  assetType        AssetType
+  institution      String?
+  quantity         Decimal?    @db.Decimal(14, 4)
+  amountBRL        Decimal     @db.Decimal(12, 2)
+  usdRate          Decimal?    @db.Decimal(10, 4)
+  amountUSD        Decimal?    @db.Decimal(12, 2)
+  referenceDate    DateTime
+  notes            String?
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([userId, assetType])
+  @@index([userId, referenceDate])
+}
+
+model Summary {
+  id                String    @id @default(cuid())
+  userId            String
+  monthReference    DateTime
+  cashBalance       Decimal   @db.Decimal(12, 2)
+  digitalBalance    Decimal   @db.Decimal(12, 2)
+  note              String?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([userId, monthReference])
+  @@index([userId, monthReference])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
