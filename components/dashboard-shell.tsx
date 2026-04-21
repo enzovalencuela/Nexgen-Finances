@@ -101,10 +101,10 @@ export function DashboardShell({
               </div>
 
               <div className="space-y-3">
-                <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                <h1 className="max-w-4xl text-3xl font-semibold leading-[1.02] tracking-tight text-white sm:text-4xl xl:text-[3.25rem]">
                   Fechamento de {selectedMonth.replace("-", "/")} com leitura direta, colorida e editavel.
                 </h1>
-                <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-[1.05rem]">
                   Cada bloco abaixo segue a logica do seu documento: entradas, a pagar, a receber, contas, sobra e investimentos. Clique em qualquer item para editar sem sair da pagina.
                 </p>
               </div>
@@ -116,17 +116,15 @@ export function DashboardShell({
 
                   return (
                     <div key={card.key} className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm text-slate-400">{card.label}</p>
-                          <p className="mt-4 text-[clamp(2rem,3vw,3rem)] font-semibold leading-none tracking-tight text-white">
-                            {formatCurrency(value)}
-                          </p>
-                        </div>
-                        <div className={cn("shrink-0 self-start rounded-2xl bg-white/5 p-3", card.color)}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-slate-400">{card.label}</p>
+                        <div className={cn("shrink-0 rounded-2xl bg-white/5 p-2.5", card.color)}>
                           <Icon className="h-5 w-5" />
                         </div>
                       </div>
+                      <p className="mt-5 text-[clamp(1.75rem,1.65vw,2.125rem)] font-semibold leading-[0.95] tracking-tight text-white">
+                        {formatCurrency(value)}
+                      </p>
                       <div className="mt-5 h-2 rounded-full bg-white/5">
                         <div className={cn("h-2 rounded-full", card.color.replace("text-", "bg-"))} style={{ width: "78%" }} />
                       </div>
