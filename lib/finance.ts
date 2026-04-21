@@ -113,6 +113,8 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const classificationTotals = buildClassificationTotals(expenses);
   const investmentOverview = buildInvestmentOverview(investments);
 
+  const summaryLeftover = Number(summary?.cashBalance ?? 0) + Number(summary?.digitalBalance ?? 0);
+
   const totals = transactions.reduce<DashboardTotals>(
     (acc, transaction) => {
       const amount = Number(transaction.amount);
@@ -140,11 +142,15 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       payables: 0,
       receivables: 0,
       expenses: 0,
-      leftover: Number(summary?.cashBalance ?? 0) + Number(summary?.digitalBalance ?? 0),
+      leftover: summaryLeftover,
       investmentsBRL: investmentOverview.totalBRL,
       investmentsUSD: investmentOverview.totalUSD
     }
   );
+
+  if (!summary) {
+    totals.leftover = Math.max(totals.entries - totals.expenses, 0);
+  }
 
   return {
     selectedMonth,
