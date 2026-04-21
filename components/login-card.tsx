@@ -1,8 +1,8 @@
 import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
-import { signIn } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
+import { cn } from "@/lib/utils";
 
 export function LoginCard() {
   return (
@@ -20,16 +20,14 @@ export function LoginCard() {
           </p>
         </div>
 
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google", { redirectTo: "/" });
-          }}
+        <Link
+          href="/api/auth/signin/google?callbackUrl=/"
+          className={cn(
+            "inline-flex w-full items-center justify-center rounded-2xl bg-accent px-4 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-accent/90"
+          )}
         >
-          <Button type="submit" className="w-full">
-            Entrar com Google
-          </Button>
-        </form>
+          Entrar com Google
+        </Link>
       </div>
     </Panel>
   );
