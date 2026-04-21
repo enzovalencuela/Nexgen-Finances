@@ -51,9 +51,9 @@ export function BucketList({
   return (
     <div className="space-y-3">
       {buckets.map((bucket) => (
-        <div key={bucket.key} className="rounded-xl border border-white/10 bg-[#20252d] p-3">
-          <div className="mb-3 flex items-center justify-between gap-4 border-b border-white/10 pb-2">
-            <h3 className="text-[13px] font-semibold text-white">{bucket.label}</h3>
+        <div key={bucket.key} className="rounded-xl border border-slate-300 bg-white p-3">
+          <div className="mb-3 flex items-center justify-between gap-4 border-b border-slate-200 pb-2">
+            <h3 className="text-[13px] font-semibold text-slate-900">{bucket.label}</h3>
             <p className={cn("text-[13px] font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
           </div>
           <TransactionList items={bucket.items} emptyMessage="Nenhum item." creditCards={creditCards} accentClass={accentClass} compact />
@@ -65,7 +65,7 @@ export function BucketList({
 
 export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   if (creditCards.length === 0) {
-    return <p className="text-[13px] text-slate-300">Nenhum cartão cadastrado ainda.</p>;
+    return <p className="text-[13px] text-slate-500">Nenhum cartão cadastrado ainda.</p>;
   }
 
   return (
@@ -87,7 +87,7 @@ export function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
 
 export function InvestmentList({ investments }: { investments: Investment[] }) {
   if (investments.length === 0) {
-    return <p className="text-[13px] text-slate-300">Nenhum ativo registrado neste período.</p>;
+    return <p className="text-[13px] text-slate-500">Nenhum ativo registrado neste período.</p>;
   }
 
   return (

@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
-  background: #101317;
+  background: #f5f2ec;
 }
 
 body {
   min-height: 100vh;
-  background: #101317;
-  color: #e5eefb;
+  background: #f5f2ec;
+  color: #1f2937;
 }
 
 a {
@@ -22,15 +22,17 @@ a {
 }
 
 .ledger-paper {
-  background: #171b21;
+  background: #fffdf9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .paper-dots {
-  background: #171b21;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.22) 1px, transparent 0);
+  background-size: 18px 18px;
 }
 
 * {
-  border-color: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.22);
 }
 
 input,

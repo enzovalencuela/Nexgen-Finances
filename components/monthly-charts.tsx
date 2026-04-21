@@ -38,12 +38,12 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   const color = payload[0]?.color ?? "#e5eefb";
 
   return (
-    <div className="min-w-44 rounded-2xl border border-white/15 bg-slate-950/95 px-4 py-3 shadow-2xl backdrop-blur-sm">
+    <div className="min-w-44 rounded-2xl border border-slate-300 bg-white px-4 py-3 shadow-lg">
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-        <p className="text-[13px] font-semibold text-white">{label}</p>
+        <p className="text-[13px] font-semibold text-slate-900">{label}</p>
       </div>
-      <p className="mt-2 text-[13px] text-slate-200">Valor: {formatCurrency(value)}</p>
+      <p className="mt-2 text-[13px] text-slate-700">Valor: {formatCurrency(value)}</p>
     </div>
   );
 }
@@ -107,12 +107,12 @@ export function ClassificationPieChart(props: ClassificationChartProps) {
 
       <div className="space-y-3">
         {data.map((entry, index) => (
-          <div key={entry.name} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <div key={entry.name} className="flex items-center justify-between rounded-2xl border border-slate-300 bg-white px-4 py-3">
             <div className="flex items-center gap-3">
               <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: classificationColors[index] }} />
-              <span className="text-[13px] text-white">{entry.name}</span>
+              <span className="text-[13px] text-slate-700">{entry.name}</span>
             </div>
-            <span className="text-[13px] font-semibold text-white">{formatCurrency(entry.value)}</span>
+            <span className="text-[13px] font-semibold text-slate-900">{formatCurrency(entry.value)}</span>
           </div>
         ))}
       </div>

@@ -5,8 +5,6 @@ import { AppShell } from "@/components/app-shell";
 import { CreditCardForm } from "@/components/finance-forms";
 import { CreditCardList, TransactionList } from "@/components/finance-lists";
 import { TransactionForm } from "@/components/transaction-form";
-import { Panel } from "@/components/ui/panel";
-import { SectionHeading } from "@/components/ui/section-heading";
 import type { CardInvoiceView, MonthlyStatementData } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 
@@ -21,77 +19,70 @@ export function CardsPage({ user, selectedMonth, creditCards, cardInvoices }: Pr
       selectedMonth={selectedMonth}
       currentPath="/cartoes"
       title="Cartões"
-      description="Compras, pagamentos e leitura da fatura por cartão, em uma estrutura mais direta de trabalho."
+      description="Página de acompanhamento de faturas, compras e pagamentos por cartão."
     >
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-3">
-          {cardInvoices.length === 0 ? <EmptyCardState /> : cardInvoices.map((invoice) => <InvoiceRow key={invoice.creditCard.id} invoice={invoice} creditCards={creditCards} />)}
-        </div>
+      <div className="space-y-8">
+        <section className="grid gap-8 xl:grid-cols-[1fr_320px]">
+          <div className="space-y-6">
+            {cardInvoices.length === 0 ? <EmptyCardState /> : cardInvoices.map((invoice) => <InvoiceSheet key={invoice.creditCard.id} invoice={invoice} creditCards={creditCards} />)}
+          </div>
 
-        <div className="space-y-4 border-l border-white/10 pl-0 xl:pl-4">
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Compra" title="Lançar compra no cartão" description="Use apenas para compras. Se for parcelado, informe as parcelas aqui." />
-            <div className="mt-3">
+          <div className="space-y-6">
+            <SimpleNotebookBlock title="Nova compra">
               <TransactionForm creditCards={creditCards} mode="cardPurchase" />
-            </div>
-          </Panel>
+            </SimpleNotebookBlock>
 
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Pagamento" title="Registrar pagamento de fatura" description="O valor entra como abatimento da fatura do cartão." />
-            <div className="mt-3">
+            <SimpleNotebookBlock title="Pagamento de fatura">
               <TransactionForm creditCards={creditCards} mode="cardPayment" />
-            </div>
-          </Panel>
+            </SimpleNotebookBlock>
 
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Cadastro" title="Cartões cadastrados" description="Cadastro e edição dos cartões." />
-            <div className="mt-3 space-y-3">
-              <CreditCardForm />
-              <CreditCardList creditCards={creditCards} />
-            </div>
-          </Panel>
-        </div>
-      </section>
+            <SimpleNotebookBlock title="Cartões cadastrados">
+              <div className="space-y-4">
+                <CreditCardForm />
+                <CreditCardList creditCards={creditCards} />
+              </div>
+            </SimpleNotebookBlock>
+          </div>
+        </section>
+      </div>
     </AppShell>
   );
 }
 
-function InvoiceRow({ invoice, creditCards }: { invoice: CardInvoiceView; creditCards: MonthlyStatementData["creditCards"] }) {
+function InvoiceSheet({ invoice, creditCards }: { invoice: CardInvoiceView; creditCards: MonthlyStatementData["creditCards"] }) {
   return (
-    <section className="border-b border-white/10 pb-4 last:border-b-0">
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-3 lg:flex-row lg:items-start lg:justify-between">
+    <section className="border-b border-slate-300 pb-6 last:border-b-0">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-[15px] font-semibold text-white">{invoice.creditCard.name}</p>
-          <p className="mt-1 text-[12px] text-slate-400">
-            Fecha dia {invoice.creditCard.closingDay ?? "-"} • vence dia {invoice.creditCard.dueDay ?? "-"}
-          </p>
+          <h2 className="text-[1rem] font-bold uppercase text-slate-900">{invoice.creditCard.name}:</h2>
+          <p className="mt-1 text-[13px] text-slate-500">Fecha dia {invoice.creditCard.closingDay ?? "-"} • vence dia {invoice.creditCard.dueDay ?? "-"}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <MiniPill label="Fatura" value={formatCurrency(invoice.invoiceTotal)} />
-          <MiniPill label="Atrasado" value={formatCurrency(invoice.overdueTotal)} warning={invoice.overdueTotal > 0} />
-          <Link href={`/cartoes/${invoice.creditCard.id}?month=${invoice.monthReference}`} className="rounded-xl border border-white/10 bg-[#20252d] px-3 py-2 text-[13px] text-slate-200 transition hover:bg-[#262c35]">
+          <Pill label="Fatura" value={formatCurrency(invoice.invoiceTotal)} />
+          <Pill label="Atrasado" value={formatCurrency(invoice.overdueTotal)} warning={invoice.overdueTotal > 0} />
+          <Link href={`/cartoes/${invoice.creditCard.id}?month=${invoice.monthReference}`} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50">
             Abrir detalhes
           </Link>
         </div>
       </div>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
         {invoice.sections.map((section) => (
-          <div key={section.key} className="rounded-xl border border-white/10 bg-[#20252d] p-3">
-            <div className="mb-3 flex items-start justify-between gap-3 border-b border-white/10 pb-2">
+          <div key={section.key} className="rounded-md border border-slate-300 bg-white p-3">
+            <div className="mb-3 flex items-start justify-between gap-3 border-b border-slate-200 pb-2">
               <div>
-                <h3 className="text-[13px] font-semibold text-white">{section.title}</h3>
-                <p className="mt-1 text-[12px] text-slate-400">{section.description}</p>
+                <h3 className="text-[13px] font-semibold text-slate-900">{section.title}</h3>
+                <p className="mt-1 text-[12px] text-slate-500">{section.description}</p>
               </div>
-              <span className={cn("text-[13px] font-medium", section.key === "overdue" ? "text-amber-200" : section.key === "payments" ? "text-emerald-200" : "text-white")}>{formatCurrency(section.total)}</span>
+              <span className={cn("text-[13px] font-medium", section.key === "overdue" ? "text-amber-700" : section.key === "payments" ? "text-emerald-700" : "text-slate-900")}>{formatCurrency(section.total)}</span>
             </div>
 
             <TransactionList
               items={section.items}
               emptyMessage={section.emptyMessage}
               creditCards={creditCards}
-              accentClass={section.key === "overdue" ? "text-amber-200" : section.key === "payments" ? "text-emerald-200" : "text-slate-200"}
+              accentClass={section.key === "overdue" ? "text-amber-700" : section.key === "payments" ? "text-emerald-700" : "text-slate-700"}
               compact
             />
           </div>
@@ -101,11 +92,20 @@ function InvoiceRow({ invoice, creditCards }: { invoice: CardInvoiceView; credit
   );
 }
 
-function MiniPill({ label, value, warning }: { label: string; value: string; warning?: boolean }) {
+function SimpleNotebookBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#20252d] px-3 py-2">
+    <section>
+      <h2 className="text-[1rem] font-bold uppercase text-slate-900">{title}:</h2>
+      <div className="mt-3 rounded-md border border-slate-300 bg-white p-3">{children}</div>
+    </section>
+  );
+}
+
+function Pill({ label, value, warning }: { label: string; value: string; warning?: boolean }) {
+  return (
+    <div className="rounded-md border border-slate-300 bg-white px-3 py-2">
       <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">{label}</p>
-      <p className={cn("mt-1 text-[13px] font-medium", warning ? "text-amber-200" : "text-white")}>{value}</p>
+      <p className={cn("mt-1 text-[13px] font-medium", warning ? "text-amber-700" : "text-slate-900")}>{value}</p>
     </div>
   );
 }
@@ -113,7 +113,8 @@ function MiniPill({ label, value, warning }: { label: string; value: string; war
 function EmptyCardState() {
   return (
     <section>
-      <SectionHeading eyebrow="Sem movimento" title="Nenhuma fatura encontrada neste mês" description="Cadastre um cartão ou registre uma compra para começar a organizar as faturas." />
+      <h2 className="text-[1rem] font-bold uppercase text-slate-900">Cartões:</h2>
+      <div className="mt-3 rounded-md border border-slate-300 bg-white p-4 text-[13px] text-slate-500">Nenhuma fatura encontrada neste mês.</div>
     </section>
   );
 }

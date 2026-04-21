@@ -66,7 +66,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
           <Input name="transactionDate" type="date" defaultValue={today} required />
         </div>
 
-        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white">
+        <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
           <input
             type="checkbox"
             className="h-4 w-4 rounded"
@@ -88,7 +88,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
           </>
         )}
 
-        <p className="text-[11px] text-slate-400">Toda compra de cartão entra como pendente na fatura. Se ficar sem pagar, ela continua aparecendo nos meses seguintes como atrasada.</p>
+        <p className="text-[11px] text-slate-500">Toda compra de cartão entra como pendente na fatura. Se ficar sem pagar, ela continua aparecendo nos meses seguintes como atrasada.</p>
 
         <Button type="submit">Salvar compra no cartão</Button>
       </ActionForm>
@@ -123,7 +123,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
           <Input name="transactionDate" type="date" defaultValue={today} required />
         </div>
 
-        <p className="text-[11px] text-slate-400">Esse lançamento não cria uma nova dívida. Ele entra como pagamento e abate automaticamente o total aberto da fatura.</p>
+        <p className="text-[11px] text-slate-500">Esse lançamento não cria uma nova dívida. Ele entra como pagamento e abate automaticamente o total aberto da fatura.</p>
 
         <Button type="submit">Salvar pagamento de fatura</Button>
       </ActionForm>
@@ -166,7 +166,7 @@ export function TransactionForm({ creditCards, mode = "general" }: { creditCards
 
       <Input name="source" placeholder="Grupo: Pai, Nicoli, Contas Nicoli, Outros" />
 
-      <p className="text-[11px] text-slate-400">O fluxo geral não mistura cartão. Compras e pagamentos de fatura agora ficam na página Cartões.</p>
+      <p className="text-[11px] text-slate-500">O fluxo geral não mistura cartão. Compras e pagamentos de fatura agora ficam na página Cartões.</p>
 
       <Button type="submit">Salvar item</Button>
     </ActionForm>

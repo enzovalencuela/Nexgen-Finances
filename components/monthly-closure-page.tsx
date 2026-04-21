@@ -1,4 +1,3 @@
-import { NotebookText } from "lucide-react";
 import type { User } from "@prisma/client";
 
 import { AppShell } from "@/components/app-shell";
@@ -6,8 +5,6 @@ import { BucketList, CreditCardList, InvestmentList, TransactionList } from "@/c
 import { CreditCardForm, InvestmentForm, SummaryForm } from "@/components/finance-forms";
 import { ClassificationPieChart } from "@/components/monthly-charts";
 import { TransactionForm } from "@/components/transaction-form";
-import { Panel } from "@/components/ui/panel";
-import { SectionHeading } from "@/components/ui/section-heading";
 import type { MonthlyStatementData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -15,11 +12,11 @@ type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
 };
 
-const sectionThemes = {
-  entries: "text-cyan-200",
-  payables: "text-yellow-100",
-  receivables: "text-sky-100",
-  expenses: "text-fuchsia-100"
+const themes = {
+  entries: "text-cyan-700",
+  payables: "text-teal-700",
+  receivables: "text-sky-700",
+  expenses: "text-fuchsia-700"
 } as const;
 
 export function MonthlyClosurePage({
@@ -42,82 +39,43 @@ export function MonthlyClosurePage({
       user={user}
       selectedMonth={selectedMonth}
       currentPath="/fechamento"
-      title="Fechamento do mês"
-      description="Leitura direta dos blocos do seu fechamento, com edição rápida e sem cara de dashboard."
+      title={`Fechamento ${selectedMonth.replace("-", "/")}`}
+      description="Página principal do seu fechamento mensal, organizada como uma folha de caderno com blocos diretos de leitura."
     >
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="grid gap-x-6 gap-y-5 lg:grid-cols-2">
-          <WorkSection title={`Entradas • ${formatCurrency(totals.entries)}`}>
-            <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={sectionThemes.entries} />
-          </WorkSection>
+      <div className="space-y-8">
+        <header className="border-b border-slate-300 pb-4">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Salário / fechamento</p>
+          <h1 className="mt-2 text-[1.4rem] font-semibold text-slate-900">Visão mensal</h1>
+          <p className="mt-1 text-[13px] text-slate-500">Leitura simples das entradas, pendências, contas, sobra e investimentos.</p>
+        </header>
 
-          <WorkSection title={`A pagar • ${formatCurrency(totals.payables)}`}>
-            <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste período." creditCards={creditCards} accentClass={sectionThemes.payables} />
-          </WorkSection>
+        <section className="grid gap-8 xl:grid-cols-[1fr_1fr]">
+          <NotebookBlock title="Entradas" totalLabel={`Total recebido: ${formatCurrency(totals.entries)}`} tone="cyan">
+            <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste período." creditCards={creditCards} accentClass={themes.entries} />
+          </NotebookBlock>
 
-          <WorkSection title={`A receber • ${formatCurrency(totals.receivables)}`}>
-            <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste período." creditCards={creditCards} accentClass={sectionThemes.receivables} />
-          </WorkSection>
+          <NotebookBlock title="Contas" totalLabel={`Total gasto: ${formatCurrency(totals.expenses)}`} tone="magenta">
+            <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste período." creditCards={creditCards} accentClass={themes.expenses} />
+          </NotebookBlock>
 
-          <WorkSection title={`Contas • ${formatCurrency(totals.expenses)}`}>
-            <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste período." creditCards={creditCards} accentClass={sectionThemes.expenses} />
-          </WorkSection>
+          <NotebookBlock title="A pagar" totalLabel={`Total a pagar: ${formatCurrency(totals.payables)}`} tone="teal">
+            <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste período." creditCards={creditCards} accentClass={themes.payables} />
+          </NotebookBlock>
 
-          <WorkSection title={`Investimentos • ${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} className="lg:col-span-2">
-            <InvestmentList investments={investments} />
-          </WorkSection>
-        </div>
+          <NotebookBlock title="Resumo do mês" tone="yellow">
+            <SummaryLine label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
+            <SummaryLine label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
+            <SummaryLine label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
+            <SummaryLine label="Sobra total" value={formatCurrency(totals.leftover)} />
+            <SummaryLine label="Investimentos" value={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} />
+          </NotebookBlock>
 
-        <div className="space-y-4 border-l border-white/10 pl-0 xl:pl-4">
-          <Panel className="bg-transparent px-0 py-0">
-            <div className="flex items-center gap-2">
-              <NotebookText className="h-4 w-4 text-slate-400" />
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Resumo</p>
-            </div>
-            <div className="mt-3 grid gap-2">
-              <InfoLine label="Salário-base" value={formatCurrency(summaryMeta.salaryBase)} />
-              <InfoLine label="A comprar" value={formatCurrency(summaryMeta.purchaseEstimate)} />
-              <InfoLine label="Retirado dos investimentos" value={formatCurrency(summaryMeta.investmentWithdrawn)} />
-              <InfoLine label="Sobra total" value={formatCurrency(totals.leftover)} />
-            </div>
-          </Panel>
+          <NotebookBlock title="A receber" totalLabel={`Total a receber: ${formatCurrency(totals.receivables)}`} tone="blue">
+            <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste período." creditCards={creditCards} accentClass={themes.receivables} />
+          </NotebookBlock>
 
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Lançar" title="Novo item" description="Entradas, contas pagas, valores a receber e pendências gerais." />
-            <div className="mt-3">
-              <TransactionForm creditCards={creditCards} mode="general" />
-            </div>
-          </Panel>
-
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Fechar" title="Resumo do mês" description="Números finais e observações do fechamento." />
-            <div className="mt-3">
-              <SummaryForm
-                selectedMonth={selectedMonth}
-                summary={summary ? { cashBalance: Number(summary.cashBalance ?? 0), digitalBalance: Number(summary.digitalBalance ?? 0) } : null}
-                summaryMeta={summaryMeta}
-              />
-            </div>
-          </Panel>
-
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Investimentos" title="Atualizar posição" description="Cadastro rápido de posição e ajuste." />
-            <div className="mt-3">
-              <InvestmentForm />
-            </div>
-          </Panel>
-
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Cartões" title="Cadastro" description="Cadastro básico de cartão, fechamento e vencimento." />
-            <div className="mt-3 space-y-3">
-              <CreditCardForm />
-              <CreditCardList creditCards={creditCards} />
-            </div>
-          </Panel>
-
-          <Panel className="bg-transparent px-0 py-0">
-            <SectionHeading eyebrow="Classificação" title="Distribuição dos gastos" description="Apenas para conferência visual rápida." />
-            <div className="mt-3 rounded-xl border border-white/10 bg-[#20252d] p-3">
+          <NotebookBlock title="Classificação" tone="gray">
+            <div className="rounded-lg border border-slate-300 bg-white p-3">
               <ClassificationPieChart
                 necessary={classificationTotals.necessary}
                 optional={classificationTotals.optional}
@@ -125,29 +83,65 @@ export function MonthlyClosurePage({
                 investment={classificationTotals.investment}
               />
             </div>
-          </Panel>
-        </div>
-      </section>
+          </NotebookBlock>
+
+          <NotebookBlock title="Investimentos" totalLabel={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`} tone="gray" className="xl:col-span-2">
+            <InvestmentList investments={investments} />
+          </NotebookBlock>
+        </section>
+
+        <section className="grid gap-8 xl:grid-cols-[1fr_1fr_1fr]">
+          <NotebookBlock title="Novo item" tone="gray">
+            <TransactionForm creditCards={creditCards} mode="general" />
+          </NotebookBlock>
+
+          <NotebookBlock title="Fechamento" tone="gray">
+            <SummaryForm
+              selectedMonth={selectedMonth}
+              summary={summary ? { cashBalance: Number(summary.cashBalance ?? 0), digitalBalance: Number(summary.digitalBalance ?? 0) } : null}
+              summaryMeta={summaryMeta}
+            />
+          </NotebookBlock>
+
+          <NotebookBlock title="Cadastro rápido" tone="gray">
+            <div className="space-y-4">
+              <CreditCardForm />
+              <InvestmentForm />
+              <CreditCardList creditCards={creditCards} />
+            </div>
+          </NotebookBlock>
+        </section>
+      </div>
     </AppShell>
   );
 }
 
-function WorkSection({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+function NotebookBlock({ title, totalLabel, tone, className, children }: { title: string; totalLabel?: string; tone: "cyan" | "teal" | "blue" | "magenta" | "yellow" | "gray"; className?: string; children: React.ReactNode }) {
+  const toneClasses = {
+    cyan: "border-cyan-300 bg-cyan-50",
+    teal: "border-teal-300 bg-teal-50",
+    blue: "border-sky-300 bg-sky-50",
+    magenta: "border-fuchsia-300 bg-fuchsia-50",
+    yellow: "border-yellow-300 bg-yellow-50",
+    gray: "border-slate-300 bg-white"
+  };
+
   return (
     <section className={className}>
-      <div className="border-b border-white/10 pb-2">
-        <h2 className="text-[14px] font-semibold text-white">{title}</h2>
+      <div className="mb-3">
+        <h2 className="text-[1rem] font-bold uppercase text-slate-900">{title}:</h2>
+        {totalLabel ? <p className="mt-1 inline-block bg-cyan-200 px-1.5 py-0.5 text-[13px] font-semibold text-slate-900">{totalLabel}</p> : null}
       </div>
-      <div className="mt-3">{children}</div>
+      <div className={`rounded-md border p-3 ${toneClasses[tone]}`}>{children}</div>
     </section>
   );
 }
 
-function InfoLine({ label, value }: { label: string; value: string }) {
+function SummaryLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#20252d] px-3 py-2.5">
-      <span className="text-[12px] text-slate-400">{label}</span>
-      <span className="text-[13px] font-medium text-white">{value}</span>
+    <div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-slate-800 last:mb-0">
+      <span>{label}</span>
+      <span className="bg-cyan-200 px-1.5 py-0.5 font-semibold text-slate-900">{value}</span>
     </div>
   );
 }

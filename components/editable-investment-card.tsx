@@ -12,27 +12,27 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
   const defaultDate = new Date(investment.referenceDate).toISOString().slice(0, 10);
 
   return (
-    <details className="group rounded-xl border border-white/10 bg-[#20252d] p-3 open:bg-[#262c35]">
+    <details className="group rounded-xl border border-slate-300 bg-white p-3 open:bg-[#f7f4ee]">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[13px] font-medium text-white">{investment.name}</p>
-            <p className="text-[12px] text-slate-400">
+            <p className="text-[13px] font-medium text-slate-900">{investment.name}</p>
+            <p className="text-[12px] text-slate-500">
               {assetTypeLabels[investment.assetType]}
               {investment.institution ? ` • ${investment.institution}` : ""}
             </p>
           </div>
 
           <div className="text-right">
-            <p className="text-[13px] font-semibold text-white">{formatCurrency(Number(investment.amountBRL))}</p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[13px] font-semibold text-slate-900">{formatCurrency(Number(investment.amountBRL))}</p>
+            <p className="text-[11px] text-slate-500">
               {investment.amountUSD ? formatCurrency(Number(investment.amountUSD), "USD") : "Sem valor em USD"}
             </p>
           </div>
         </div>
       </summary>
 
-      <div className="mt-4 border-t border-white/10 pt-4">
+      <div className="mt-4 border-t border-slate-200 pt-4">
         <ActionForm serverAction={updateInvestment} className="grid gap-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={investment.id} />
           <div className="grid gap-3 md:grid-cols-2">
@@ -65,7 +65,7 @@ export function EditableInvestmentCard({ investment }: { investment: Investment 
 
         <ActionForm serverAction={deleteInvestment} className="mt-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={investment.id} />
-          <Button type="submit" variant="ghost" className="px-0 text-rose-300 hover:text-rose-200">
+          <Button type="submit" variant="ghost" className="px-0 text-rose-600 hover:text-rose-700">
             Excluir investimento
           </Button>
         </ActionForm>

@@ -58,10 +58,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <div
                 key={toast.id}
                 className={cn(
-                  "pointer-events-auto flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-glow backdrop-blur-xl",
+                  "pointer-events-auto flex items-start gap-3 rounded-2xl border bg-white px-4 py-3 shadow-lg",
                   toast.tone === "success"
-                    ? "border-emerald-400/30 bg-emerald-500/15 text-emerald-50"
-                    : "border-rose-400/30 bg-rose-500/15 text-rose-50"
+                    ? "border-emerald-300 text-emerald-800"
+                    : "border-rose-300 text-rose-800"
                 )}
               >
                 <Icon className="mt-0.5 h-5 w-5 shrink-0" />
@@ -69,7 +69,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => dismissToast(toast.id)}
-                  className="rounded-full p-1 text-current/70 transition hover:bg-white/10 hover:text-current"
+                  className="rounded-full p-1 text-current/70 transition hover:bg-slate-100 hover:text-current"
                   aria-label="Fechar aviso"
                 >
                   <X className="h-4 w-4" />

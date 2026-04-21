@@ -7,21 +7,21 @@ import { Input } from "@/components/ui/input";
 
 export function EditableCreditCard({ creditCard }: { creditCard: CreditCard }) {
   return (
-    <details className="group rounded-xl border border-white/10 bg-[#20252d] p-3 open:bg-[#262c35]">
+    <details className="group rounded-xl border border-slate-300 bg-white p-3 open:bg-[#f7f4ee]">
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-[13px] font-medium text-white">{creditCard.name}</p>
-            <p className="text-[12px] text-slate-400">{creditCard.brand ?? "Sem bandeira"}</p>
+            <p className="text-[13px] font-medium text-slate-900">{creditCard.name}</p>
+            <p className="text-[12px] text-slate-500">{creditCard.brand ?? "Sem bandeira"}</p>
           </div>
 
-          <div className="text-right text-[12px] text-slate-400">
+          <div className="text-right text-[12px] text-slate-500">
             Fecha dia {creditCard.closingDay ?? "-"} • vence dia {creditCard.dueDay ?? "-"}
           </div>
         </div>
       </summary>
 
-      <div className="mt-4 border-t border-white/10 pt-4">
+      <div className="mt-4 border-t border-slate-200 pt-4">
         <ActionForm serverAction={updateCreditCard} className="grid gap-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={creditCard.id} />
           <Input name="name" defaultValue={creditCard.name} placeholder="Nome do cartão" />
@@ -42,7 +42,7 @@ export function EditableCreditCard({ creditCard }: { creditCard: CreditCard }) {
 
         <ActionForm serverAction={deleteCreditCard} className="mt-3" closeDetailsOnSuccess>
           <input type="hidden" name="id" value={creditCard.id} />
-          <Button type="submit" variant="ghost" className="px-0 text-rose-300 hover:text-rose-200">
+          <Button type="submit" variant="ghost" className="px-0 text-rose-600 hover:text-rose-700">
             Excluir cartão
           </Button>
         </ActionForm>
