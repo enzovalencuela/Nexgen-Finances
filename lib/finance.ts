@@ -141,7 +141,11 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     persistedEntries
   });
   const entries = sortTransactionsByDateDesc(carryoverEntry ? [...persistedEntries, carryoverEntry] : persistedEntries);
-  const payables = monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL);
+  const payableAdjustments = buildCardPaymentAdjustments(typedTransactions);
+  const payables = sortTransactionsByDateDesc([
+    ...monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL),
+    ...payableAdjustments
+  ]);
   const receivables = monthTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING
   );
@@ -157,38 +161,15 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
 
   const summaryLeftover = Number(summary?.cashBalance ?? 0) + Number(summary?.digitalBalance ?? 0);
 
-  const totals = monthTransactions.reduce<DashboardTotals>(
-    (acc, transaction) => {
-      const amount = Number(transaction.amount);
-
-      if (transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID) {
-        acc.entries += amount;
-      }
-
-      if (transaction.type === TransactionType.BILL) {
-        acc.payables += amount;
-      }
-
-      if (transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING) {
-        acc.receivables += amount;
-      }
-
-      if (transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID) {
-        acc.expenses += amount;
-      }
-
-      return acc;
-    },
-    {
-      entries: carryoverEntry ? Number(carryoverEntry.amount) : 0,
-      payables: 0,
-      receivables: 0,
-      expenses: 0,
-      leftover: summaryLeftover,
-      investmentsBRL: investmentOverview.totalBRL,
-      investmentsUSD: investmentOverview.totalUSD
-    }
-  );
+  const totals: DashboardTotals = {
+    entries: sumTransactions(entries),
+    payables: sumTransactions(payables),
+    receivables: sumTransactions(receivables),
+    expenses: sumTransactions(expenses),
+    leftover: summaryLeftover,
+    investmentsBRL: investmentOverview.totalBRL,
+    investmentsUSD: investmentOverview.totalUSD
+  };
 
   if (!summary) {
     totals.leftover = Math.max(totals.entries - totals.expenses, 0);
@@ -331,6 +312,26 @@ function sortTransactionsByDateDesc(transactions: TransactionWithCard[]) {
 
     return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
   });
+}
+
+function buildCardPaymentAdjustments(transactions: TransactionWithCard[]) {
+  return transactions
+    .filter((transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID && transaction.creditCardId && !transaction.isCreditCard)
+    .map<TransactionWithCard>((transaction) => ({
+      ...transaction,
+      id: `${transaction.id}-card-payment-adjustment`,
+      title: `Abatimento da fatura${transaction.creditCard?.name ? ` - ${transaction.creditCard.name}` : ""}`,
+      description: "Pagamento de fatura abatido automaticamente do total do cartao.",
+      type: TransactionType.BILL,
+      source: "Cartao",
+      amount: new Prisma.Decimal(-Number(transaction.amount)),
+      isDerived: true,
+      derivedKind: "cardPayment"
+    }));
+}
+
+function sumTransactions(transactions: TransactionWithCard[]) {
+  return transactions.reduce((total, transaction) => total + Number(transaction.amount), 0);
 }
 
 function hasMatchingPersistedInstallment(transactions: TransactionWithCard[], origin: InstallmentOrigin, installmentCurrent: number) {

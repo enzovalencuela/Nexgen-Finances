@@ -21,6 +21,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
 
   if (transaction.isDerived) {
     const isCarryover = transaction.derivedKind === "carryover";
+    const isCardPayment = transaction.derivedKind === "cardPayment";
 
     return (
       <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/5 p-4">
@@ -29,13 +30,13 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
             <div className="flex items-center gap-2">
               <p className="font-medium text-white">{transaction.title}</p>
               <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                {isCarryover ? "Automatico" : "Parcela automatica"}
+                {isCarryover ? "Automatico" : isCardPayment ? "Abatimento automatico" : "Parcela automatica"}
               </span>
             </div>
             <p className="text-sm text-slate-300">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
-              {!isCarryover && transaction.installmentCurrent && transaction.installmentTotal
+              {!isCarryover && !isCardPayment && transaction.installmentCurrent && transaction.installmentTotal
                 ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
                 : ""}
             </p>
@@ -44,7 +45,9 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
 
           <div className="text-right">
             <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
-            <p className={`text-xs font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automatica" : "Cobranca futura automatica"}</p>
+            <p className={`text-xs font-medium ${accentClass}`}>
+              {isCarryover ? "Entrada inicial automatica" : isCardPayment ? "Pagamento abatido da fatura" : "Cobranca futura automatica"}
+            </p>
           </div>
         </div>
       </div>

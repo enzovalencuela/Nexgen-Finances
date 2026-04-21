@@ -15,7 +15,7 @@ export type DashboardTotals = {
 export type TransactionWithCard = Transaction & {
   creditCard: CreditCard | null;
   isDerived?: boolean;
-  derivedKind?: "carryover" | "installment";
+  derivedKind?: "carryover" | "installment" | "cardPayment";
 };
 
 export type StatementBucket = {

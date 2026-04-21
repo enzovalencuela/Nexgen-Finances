@@ -2,14 +2,15 @@ import { ArrowDownCircle, ArrowUpCircle, Landmark, NotebookText, PiggyBank, Wall
 import Image from "next/image";
 import type { CreditCard, Investment, Summary, User } from "@prisma/client";
 
-import { createCreditCard, createInvestment, createTransaction, upsertSummary } from "@/app/actions";
-import { assetTypeLabels, transactionCategoryLabels, transactionStatusLabels, transactionTypeLabels } from "@/lib/constants";
+import { createCreditCard, createInvestment, upsertSummary } from "@/app/actions";
+import { assetTypeLabels } from "@/lib/constants";
 import type { MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { EditableInvestmentCard } from "@/components/editable-investment-card";
 import { EditableCreditCard } from "@/components/editable-credit-card";
 import { EditableTransactionCard } from "@/components/editable-transaction-card";
 import { ClassificationPieChart, OverviewBarChart } from "@/components/monthly-charts";
+import { TransactionForm } from "@/components/transaction-form";
 import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -499,64 +500,6 @@ function TransactionList({
         <EditableTransactionCard key={transaction.id} transaction={transaction} creditCards={creditCards} accentClass={accentClass} compact={compact} />
       ))}
     </div>
-  );
-}
-
-function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
-  const today = new Date().toISOString().slice(0, 10);
-
-  return (
-    <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
-      <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Pai" required />
-      <Input name="description" placeholder="Observacao ou detalhe" />
-      <div className="grid gap-3 md:grid-cols-2">
-        <Select name="type" defaultValue="EXPENSE">
-          {Object.entries(transactionTypeLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-        <Select name="category" defaultValue="NECESSARY">
-          {Object.entries(transactionCategoryLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Input name="amount" type="number" step="0.01" placeholder="Valor" required />
-        <Input name="transactionDate" type="date" defaultValue={today} required />
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Select name="status" defaultValue="PAID">
-          {Object.entries(transactionStatusLabels).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </Select>
-        <Input name="source" placeholder="Grupo: Cartao, Nicoli, Pai, Outros" />
-      </div>
-      <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white">
-        <input type="checkbox" name="isCreditCard" className="h-4 w-4 rounded" />
-        Movimento no cartao de credito
-      </label>
-      <Select name="creditCardId" defaultValue="">
-        <option value="">Selecione o cartao</option>
-        {creditCards.map((creditCard) => (
-          <option key={creditCard.id} value={creditCard.id}>
-            {creditCard.name}
-          </option>
-        ))}
-      </Select>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Input name="installmentCurrent" type="number" min="1" placeholder="Parcela atual" />
-        <Input name="installmentTotal" type="number" min="1" placeholder="Total de parcelas" />
-      </div>
-      <Button type="submit">Salvar item</Button>
-    </ActionForm>
   );
 }
 
