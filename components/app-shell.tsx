@@ -1,4 +1,4 @@
-import { CalendarDays, CreditCard, LayoutGrid, NotebookTabs } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import type { User } from "@prisma/client";
 
 import { AppShellSidebar } from "@/components/app-shell-sidebar";
@@ -16,17 +16,11 @@ type Props = {
   children: React.ReactNode;
 };
 
-const navItems = [
-  { href: "/" as const, label: "Início", icon: LayoutGrid },
-  { href: "/fechamento" as const, label: "Fechamento", icon: NotebookTabs },
-  { href: "/cartoes" as const, label: "Cartões", icon: CreditCard }
-];
-
 export function AppShell({ user, selectedMonth, currentPath, title, description, children }: Props) {
   return (
     <main className="min-h-screen bg-[#f5f2ec] px-2 py-2 dark:bg-[#111318] sm:px-3">
       <div className="mx-auto grid max-w-[1750px] gap-0 rounded-[20px] border border-slate-300 bg-[#efebe4] dark:border-slate-800 dark:bg-[#171a20] lg:grid-cols-[260px_240px_minmax(0,1fr)]">
-        <AppShellSidebar user={user} accountActions={<SignOutButton />} currentPath={currentPath} selectedMonth={selectedMonth} navItems={navItems} />
+        <AppShellSidebar user={user} accountActions={<SignOutButton />} currentPath={currentPath} selectedMonth={selectedMonth} />
 
         <aside className="border-r border-slate-300 bg-[#f2eee8] px-3 py-4 dark:border-slate-800 dark:bg-[#1a1e27] lg:block">
           <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">Mês</p>

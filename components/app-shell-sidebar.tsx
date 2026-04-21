@@ -1,18 +1,12 @@
 "use client";
 
-import { Menu, X, type LucideIcon } from "lucide-react";
+import { CreditCard, LayoutGrid, Menu, NotebookTabs, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import { cn } from "@/lib/utils";
-
-type NavItem = {
-  href: "/" | "/fechamento" | "/cartoes";
-  label: string;
-  icon: LucideIcon;
-};
 
 type Props = {
   user: {
@@ -23,10 +17,15 @@ type Props = {
   accountActions: React.ReactNode;
   currentPath: "/" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
   selectedMonth: string;
-  navItems: NavItem[];
 };
 
-export function AppShellSidebar({ user, accountActions, currentPath, selectedMonth, navItems }: Props) {
+const navItems = [
+  { href: "/" as const, label: "Início", icon: LayoutGrid },
+  { href: "/fechamento" as const, label: "Fechamento", icon: NotebookTabs },
+  { href: "/cartoes" as const, label: "Cartões", icon: CreditCard }
+];
+
+export function AppShellSidebar({ user, accountActions, currentPath, selectedMonth }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -44,7 +43,7 @@ export function AppShellSidebar({ user, accountActions, currentPath, selectedMon
       </div>
 
       <aside className="hidden border-r border-slate-300 bg-[#ece7df] px-3 py-4 dark:border-slate-800 dark:bg-[#151922] lg:block">
-        <SidebarContent user={user} accountActions={accountActions} currentPath={currentPath} selectedMonth={selectedMonth} navItems={navItems} />
+        <SidebarContent user={user} accountActions={accountActions} currentPath={currentPath} selectedMonth={selectedMonth} />
       </aside>
 
       {isOpen ? (
@@ -68,7 +67,7 @@ export function AppShellSidebar({ user, accountActions, currentPath, selectedMon
               </button>
             </div>
 
-            <SidebarContent user={user} accountActions={accountActions} currentPath={currentPath} selectedMonth={selectedMonth} navItems={navItems} onNavigate={() => setIsOpen(false)} />
+            <SidebarContent user={user} accountActions={accountActions} currentPath={currentPath} selectedMonth={selectedMonth} onNavigate={() => setIsOpen(false)} />
           </aside>
         </div>
       ) : null}
@@ -76,7 +75,7 @@ export function AppShellSidebar({ user, accountActions, currentPath, selectedMon
   );
 }
 
-function SidebarContent({ user, accountActions, currentPath, selectedMonth, navItems, onNavigate }: Props & { onNavigate?: () => void }) {
+function SidebarContent({ user, accountActions, currentPath, selectedMonth, onNavigate }: Props & { onNavigate?: () => void }) {
   return (
     <>
       <div className="flex items-center gap-3">
