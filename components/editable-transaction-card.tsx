@@ -18,7 +18,9 @@ type Props = {
 
 export function EditableTransactionCard({ transaction, creditCards, accentClass, compact = false }: Props) {
   const defaultDate = new Date(transaction.transactionDate).toISOString().slice(0, 10);
-  const isReadOnlyDerived = transaction.isDerived && transaction.derivedKind !== "cardPayment";
+  const isEditableDerived = transaction.derivedKind === "cardPayment" || transaction.derivedKind === "overdueCardBill";
+  const isOverdueCardBill = transaction.derivedKind === "overdueCardBill";
+  const isReadOnlyDerived = transaction.isDerived && !isEditableDerived;
 
   if (isReadOnlyDerived) {
     const isCarryover = transaction.derivedKind === "carryover";
@@ -55,7 +57,14 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-medium text-white">{transaction.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-white">{transaction.title}</p>
+              {isOverdueCardBill ? (
+                <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                  Atrasado
+                </span>
+              ) : null}
+            </div>
             <p className="text-sm text-slate-300">
               {transaction.source ? `${transaction.source} • ` : ""}
               {formatDate(transaction.transactionDate)}
@@ -63,11 +72,12 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
                 ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
                 : ""}
             </p>
+            {isOverdueCardBill ? <p className="mt-2 text-xs text-amber-100">Pendente de mes anterior. Continua somando na fatura atual ate marcar como pago.</p> : null}
           </div>
 
           <div className="text-right">
             <p className="font-semibold text-white">{formatCurrency(Number(transaction.amount))}</p>
-            <p className={`text-xs font-medium ${accentClass}`}>{transactionStatusLabels[transaction.status]}</p>
+            <p className={`text-xs font-medium ${accentClass}`}>{isOverdueCardBill ? "Atrasado" : transactionStatusLabels[transaction.status]}</p>
           </div>
         </div>
       </summary>

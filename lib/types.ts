@@ -15,7 +15,7 @@ export type DashboardTotals = {
 export type TransactionWithCard = Transaction & {
   creditCard: CreditCard | null;
   isDerived?: boolean;
-  derivedKind?: "carryover" | "installment" | "cardPayment";
+  derivedKind?: "carryover" | "installment" | "cardPayment" | "overdueCardBill";
 };
 
 export type StatementBucket = {
@@ -23,6 +23,26 @@ export type StatementBucket = {
   label: string;
   total: number;
   items: TransactionWithCard[];
+};
+
+export type CardInvoiceSection = {
+  key: "overdue" | "current" | "installments" | "payments";
+  title: string;
+  description: string;
+  total: number;
+  items: TransactionWithCard[];
+  emptyMessage: string;
+};
+
+export type CardInvoiceView = {
+  creditCard: CreditCard;
+  invoiceTotal: number;
+  openChargesTotal: number;
+  overdueTotal: number;
+  currentChargesTotal: number;
+  installmentChargesTotal: number;
+  paymentsTotal: number;
+  sections: CardInvoiceSection[];
 };
 
 export type ClassificationTotals = {
@@ -49,4 +69,5 @@ export type MonthlyStatementData = {
   };
   summary: Summary | null;
   summaryMeta: SummaryMeta;
+  cardInvoices: CardInvoiceView[];
 };

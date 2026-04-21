@@ -25,6 +25,15 @@ export function toMonthInput(date = new Date()) {
   return `${year}-${month}`;
 }
 
+export function formatMonthLabel(month: string) {
+  const [year, monthIndex] = month.split("-").map(Number);
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric"
+  }).format(new Date(year, monthIndex - 1, 1));
+}
+
 export function monthBounds(month: string) {
   const [year, monthIndex] = month.split("-").map(Number);
   const start = new Date(year, monthIndex - 1, 1);

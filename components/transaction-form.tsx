@@ -10,39 +10,134 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
-type EntryKind = "income_paid" | "income_pending" | "expense_paid" | "bill_pending" | "card_payment";
+type EntryKind = "income_paid" | "income_pending" | "expense_paid" | "bill_pending";
+type FormMode = "general" | "cardPurchase" | "cardPayment";
 
-const entryKindOptions: Array<{ value: EntryKind; label: string }> = [
+const generalEntryKindOptions: Array<{ value: EntryKind; label: string }> = [
   { value: "income_paid", label: "Entrada recebida" },
   { value: "income_pending", label: "Valor a receber" },
   { value: "expense_paid", label: "Saida paga" },
-  { value: "bill_pending", label: "Conta a pagar" },
-  { value: "card_payment", label: "Pagamento de fatura do cartao" }
+  { value: "bill_pending", label: "Conta a pagar" }
 ];
 
 const entryKindMap: Record<EntryKind, { type: string; status: string }> = {
   income_paid: { type: "INCOME", status: "PAID" },
   income_pending: { type: "INCOME", status: "PENDING" },
   expense_paid: { type: "EXPENSE", status: "PAID" },
-  bill_pending: { type: "BILL", status: "PENDING" },
-  card_payment: { type: "EXPENSE", status: "PAID" }
+  bill_pending: { type: "BILL", status: "PENDING" }
 };
 
-export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) {
+export function TransactionForm({ creditCards, mode = "general" }: { creditCards: CreditCard[]; mode?: FormMode }) {
   const today = new Date().toISOString().slice(0, 10);
   const [entryKind, setEntryKind] = useState<EntryKind>("expense_paid");
-  const [isCreditCard, setIsCreditCard] = useState(false);
+  const [isInstallmentPurchase, setIsInstallmentPurchase] = useState(false);
   const resolvedValues = useMemo(() => entryKindMap[entryKind], [entryKind]);
-  const needsCreditCardLink = isCreditCard || entryKind === "card_payment";
+
+  if (mode === "cardPurchase") {
+    return (
+      <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
+        <Input name="title" placeholder="Ex: Mercado, Uber, Amazon" required />
+        <Input name="description" placeholder="Observacao da compra" />
+        <div className="grid gap-3 md:grid-cols-2">
+          <Select name="creditCardId" defaultValue="" required>
+            <option value="">Selecione o cartao</option>
+            {creditCards.map((creditCard) => (
+              <option key={creditCard.id} value={creditCard.id}>
+                {creditCard.name}
+              </option>
+            ))}
+          </Select>
+          <Select name="category" defaultValue="NECESSARY">
+            {Object.entries(transactionCategoryLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <input type="hidden" name="type" value="BILL" />
+        <input type="hidden" name="status" value="PENDING" />
+        <input type="hidden" name="source" value="Cartao" />
+        <input type="hidden" name="isCreditCard" value="on" />
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input name="amount" type="number" step="0.01" placeholder="Valor da compra" required />
+          <Input name="transactionDate" type="date" defaultValue={today} required />
+        </div>
+
+        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded"
+            checked={isInstallmentPurchase}
+            onChange={(event) => setIsInstallmentPurchase(event.target.checked)}
+          />
+          Compra parcelada
+        </label>
+
+        {isInstallmentPurchase ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input name="installmentCurrent" type="number" min="1" defaultValue="1" placeholder="Parcela atual" required />
+            <Input name="installmentTotal" type="number" min="2" placeholder="Total de parcelas" required />
+          </div>
+        ) : (
+          <>
+            <input type="hidden" name="installmentCurrent" value="" />
+            <input type="hidden" name="installmentTotal" value="" />
+          </>
+        )}
+
+        <p className="text-xs text-slate-400">Toda compra de cartao entra como pendente na fatura. Se ficar sem pagar, ela continua aparecendo nos meses seguintes como atrasada.</p>
+
+        <Button type="submit">Salvar compra no cartao</Button>
+      </ActionForm>
+    );
+  }
+
+  if (mode === "cardPayment") {
+    return (
+      <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
+        <Input name="title" placeholder="Ex: Pagamento Inter Black" required />
+        <Input name="description" placeholder="Observacao do pagamento" />
+
+        <Select name="creditCardId" defaultValue="" required>
+          <option value="">Selecione o cartao</option>
+          {creditCards.map((creditCard) => (
+            <option key={creditCard.id} value={creditCard.id}>
+              {creditCard.name}
+            </option>
+          ))}
+        </Select>
+
+        <input type="hidden" name="type" value="EXPENSE" />
+        <input type="hidden" name="status" value="PAID" />
+        <input type="hidden" name="source" value="Cartao" />
+        <input type="hidden" name="isCreditCard" value="" />
+        <input type="hidden" name="installmentCurrent" value="" />
+        <input type="hidden" name="installmentTotal" value="" />
+        <input type="hidden" name="category" value="OTHER" />
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <Input name="amount" type="number" step="0.01" placeholder="Valor pago" required />
+          <Input name="transactionDate" type="date" defaultValue={today} required />
+        </div>
+
+        <p className="text-xs text-slate-400">Esse lancamento nao cria uma nova divida. Ele entra como pagamento e abate automaticamente o total aberto da fatura.</p>
+
+        <Button type="submit">Salvar pagamento de fatura</Button>
+      </ActionForm>
+    );
+  }
 
   return (
     <ActionForm serverAction={createTransaction} className="grid gap-3" resetOnSuccess>
-      <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Amigo, Fatura" required />
+      <Input name="title" placeholder="Ex: Salario, Mercado, Canva, Amigo" required />
       <Input name="description" placeholder="Observacao ou detalhe" />
 
       <div className="grid gap-3 md:grid-cols-2">
         <Select value={entryKind} onChange={(event) => setEntryKind(event.target.value as EntryKind)}>
-          {entryKindOptions.map((option) => (
+          {generalEntryKindOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -59,59 +154,19 @@ export function TransactionForm({ creditCards }: { creditCards: CreditCard[] }) 
 
       <input type="hidden" name="type" value={resolvedValues.type} />
       <input type="hidden" name="status" value={resolvedValues.status} />
+      <input type="hidden" name="creditCardId" value="" />
+      <input type="hidden" name="installmentCurrent" value="" />
+      <input type="hidden" name="installmentTotal" value="" />
+      <input type="hidden" name="isCreditCard" value="" />
 
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="amount" type="number" step="0.01" placeholder="Valor" required />
         <Input name="transactionDate" type="date" defaultValue={today} required />
       </div>
 
-      <Input name="source" placeholder="Grupo: Cartao, Contas Nicoli, Pai, Amigo, Outros" />
+      <Input name="source" placeholder="Grupo: Pai, Nicoli, Contas Nicoli, Outros" />
 
-      <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white">
-        <input
-          type="checkbox"
-          name="isCreditCard"
-          className="h-4 w-4 rounded"
-          checked={isCreditCard}
-          onChange={(event) => setIsCreditCard(event.target.checked)}
-        />
-        Movimento no cartao de credito
-      </label>
-
-      {needsCreditCardLink ? (
-        <>
-          <Select name="creditCardId" defaultValue="" required>
-            <option value="">Selecione o cartao</option>
-            {creditCards.map((creditCard) => (
-              <option key={creditCard.id} value={creditCard.id}>
-                {creditCard.name}
-              </option>
-            ))}
-          </Select>
-
-          {isCreditCard ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input name="installmentCurrent" type="number" min="1" placeholder="Parcela atual" />
-              <Input name="installmentTotal" type="number" min="1" placeholder="Total parcelas" />
-            </div>
-          ) : (
-            <>
-              <input type="hidden" name="installmentCurrent" value="" />
-              <input type="hidden" name="installmentTotal" value="" />
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          <input type="hidden" name="creditCardId" value="" />
-          <input type="hidden" name="installmentCurrent" value="" />
-          <input type="hidden" name="installmentTotal" value="" />
-        </>
-      )}
-
-      <p className="text-xs text-slate-400">
-        `Valor a receber` cria uma entrada pendente. Para compra parcelada, ligue `Movimento no cartao de credito` e preencha as parcelas. Para pagamento de fatura, selecione `Pagamento de fatura do cartao`, escolha o cartao e deixe o checkbox desligado.
-      </p>
+      <p className="text-xs text-slate-400">O fluxo geral nao mistura cartao. Compras e pagamentos de fatura agora ficam na pagina Cartoes.</p>
 
       <Button type="submit">Salvar item</Button>
     </ActionForm>

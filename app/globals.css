@@ -16,6 +16,11 @@ body {
   color: #e5eefb;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .ledger-paper {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.022)),

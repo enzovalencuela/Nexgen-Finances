@@ -1,4 +1,4 @@
-import { HomeDashboard } from "@/components/home-dashboard";
+import { CardsPage } from "@/components/cards-page";
 import { getAppPageData, type AppPageSearchParams } from "@/lib/page-data";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +7,8 @@ type PageProps = {
   searchParams?: AppPageSearchParams;
 };
 
-export default async function HomePage({ searchParams }: PageProps) {
+export default async function CardsRoutePage({ searchParams }: PageProps) {
   const pageData = await getAppPageData(searchParams);
 
-  return <HomeDashboard {...pageData} />;
+  return <CardsPage {...pageData} />;
 }

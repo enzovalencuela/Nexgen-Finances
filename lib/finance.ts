@@ -3,7 +3,7 @@ import { AssetType, Prisma, TransactionCategory, TransactionStatus, TransactionT
 import { getPrisma } from "@/lib/prisma";
 import { parseSummaryMeta } from "@/lib/summary-meta";
 import { monthBounds, toMonthInput } from "@/lib/utils";
-import type { ClassificationTotals, DashboardTotals, MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
+import type { CardInvoiceSection, CardInvoiceView, ClassificationTotals, DashboardTotals, MonthlyStatementData, StatementBucket, TransactionWithCard } from "@/lib/types";
 
 type DashboardDataParams = {
   userId: string;
@@ -44,7 +44,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins] = await Promise.all([
+  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins, pendingCardBills] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -117,6 +117,23 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       orderBy: {
         transactionDate: "desc"
       }
+    }),
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        type: TransactionType.BILL,
+        status: TransactionStatus.PENDING,
+        isCreditCard: true,
+        transactionDate: {
+          lt: start
+        }
+      },
+      include: {
+        creditCard: true
+      },
+      orderBy: {
+        transactionDate: "desc"
+      }
     })
   ]);
 
@@ -125,6 +142,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     selectedMonthStart: start,
     currentMonthTransactions: typedTransactions,
     installmentOrigins: installmentOrigins as InstallmentOrigin[]
+  });
+  const rolledOverCardBills = buildRolledOverCardBills({
+    selectedMonthStart: start,
+    pendingCardBills: pendingCardBills as TransactionWithCard[]
   });
   const monthTransactions = sortTransactionsByDateDesc([...typedTransactions, ...generatedInstallments]);
   const investments = collapseInvestmentHistory(investmentHistory);
@@ -141,9 +162,11 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     persistedEntries
   });
   const entries = sortTransactionsByDateDesc(carryoverEntry ? [...persistedEntries, carryoverEntry] : persistedEntries);
-  const payableAdjustments = buildCardPaymentAdjustments(typedTransactions);
+  const cardPayments = getCardPayments(typedTransactions);
+  const payableAdjustments = buildCardPaymentAdjustments(cardPayments);
   const payables = sortTransactionsByDateDesc([
     ...monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL),
+    ...rolledOverCardBills,
     ...payableAdjustments
   ]);
   const receivables = monthTransactions.filter(
@@ -156,6 +179,12 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const payableBuckets = groupTransactions(payables, ["Cartao", "Contas Nicoli", "Outros", "Investimentos"]);
   const receivableBuckets = groupTransactions(receivables, ["Pai", "Nicoli", "Outros"]);
   const expenseBuckets = groupTransactions(expenses, ["Cartao", "Contas Nicoli", "Outros"]);
+  const cardInvoices = buildCardInvoices({
+    creditCards,
+    monthTransactions,
+    rolledOverCardBills,
+    cardPayments
+  });
   const classificationTotals = buildClassificationTotals(expenses);
   const investmentOverview = buildInvestmentOverview(investments);
 
@@ -187,7 +216,8 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     summary: effectiveSummary,
     summaryMeta,
     creditCards,
-    investmentOverview
+    investmentOverview,
+    cardInvoices
   };
 }
 
@@ -285,6 +315,96 @@ function buildGeneratedInstallments({
   return generated;
 }
 
+function buildRolledOverCardBills({
+  selectedMonthStart,
+  pendingCardBills
+}: {
+  selectedMonthStart: Date;
+  pendingCardBills: TransactionWithCard[];
+}): TransactionWithCard[] {
+  return pendingCardBills
+    .filter((transaction) => diffInMonths(startOfMonth(transaction.transactionDate), selectedMonthStart) > 0)
+    .map((transaction) => ({
+      ...transaction,
+      isDerived: true,
+      derivedKind: "overdueCardBill"
+    }));
+}
+
+function buildCardInvoices({
+  creditCards,
+  monthTransactions,
+  rolledOverCardBills,
+  cardPayments
+}: {
+  creditCards: MonthlyStatementData["creditCards"];
+  monthTransactions: TransactionWithCard[];
+  rolledOverCardBills: TransactionWithCard[];
+  cardPayments: TransactionWithCard[];
+}): CardInvoiceView[] {
+  return creditCards.map((creditCard) => {
+    const overdueItems = sortTransactionsByDateDesc(rolledOverCardBills.filter((transaction) => transaction.creditCardId === creditCard.id));
+    const currentCardItems = sortTransactionsByDateDesc(
+      monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL && transaction.isCreditCard && transaction.creditCardId === creditCard.id)
+    );
+    const installmentItems = currentCardItems.filter(isInstallmentCharge);
+    const currentItems = currentCardItems.filter((transaction) => !isInstallmentCharge(transaction));
+    const paymentItems = sortTransactionsByDateDesc(cardPayments.filter((transaction) => transaction.creditCardId === creditCard.id));
+
+    const sections: CardInvoiceSection[] = [
+      {
+        key: "overdue",
+        title: "Em atraso",
+        description: "Compras antigas ainda pendentes e carregadas para esta fatura.",
+        total: sumTransactions(overdueItems),
+        items: overdueItems,
+        emptyMessage: "Nada em atraso neste cartao."
+      },
+      {
+        key: "current",
+        title: "Compras deste mes",
+        description: "Compras novas desta fatura que ainda estao pendentes.",
+        total: sumTransactions(currentItems),
+        items: currentItems,
+        emptyMessage: "Nenhuma compra nova nesta fatura."
+      },
+      {
+        key: "installments",
+        title: "Parcelas",
+        description: "Parcelas que caem neste mes, incluindo as automaticas.",
+        total: sumTransactions(installmentItems),
+        items: installmentItems,
+        emptyMessage: "Nenhuma parcela aberta nesta fatura."
+      },
+      {
+        key: "payments",
+        title: "Pagamentos de fatura",
+        description: "Pagamentos registrados e abatidos do total da fatura.",
+        total: sumTransactions(paymentItems),
+        items: paymentItems,
+        emptyMessage: "Nenhum pagamento registrado para esta fatura."
+      }
+    ];
+
+    const overdueTotal = sumTransactions(overdueItems);
+    const currentChargesTotal = sumTransactions(currentItems);
+    const installmentChargesTotal = sumTransactions(installmentItems);
+    const openChargesTotal = overdueTotal + currentChargesTotal + installmentChargesTotal;
+    const paymentsTotal = sumTransactions(paymentItems);
+
+    return {
+      creditCard,
+      invoiceTotal: openChargesTotal - paymentsTotal,
+      openChargesTotal,
+      overdueTotal,
+      currentChargesTotal,
+      installmentChargesTotal,
+      paymentsTotal,
+      sections
+    };
+  });
+}
+
 function hasCarryoverEntry(entries: TransactionWithCard[]) {
   return entries.some((entry) => {
     const title = normalizeEntryText(entry.title);
@@ -314,9 +434,14 @@ function sortTransactionsByDateDesc(transactions: TransactionWithCard[]) {
   });
 }
 
+function getCardPayments(transactions: TransactionWithCard[]) {
+  return transactions.filter(
+    (transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID && transaction.creditCardId && !transaction.isCreditCard
+  );
+}
+
 function buildCardPaymentAdjustments(transactions: TransactionWithCard[]) {
   return transactions
-    .filter((transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID && transaction.creditCardId && !transaction.isCreditCard)
     .map<TransactionWithCard>((transaction) => ({
       ...transaction,
       title: `Abatimento da fatura${transaction.creditCard?.name ? ` - ${transaction.creditCard.name}` : ""}`,
@@ -345,6 +470,14 @@ function hasMatchingPersistedInstallment(transactions: TransactionWithCard[], or
       normalizeText(transaction.source) === normalizeText(origin.source)
     );
   });
+}
+
+function isInstallmentCharge(transaction: TransactionWithCard) {
+  if (!transaction.installmentCurrent || !transaction.installmentTotal) {
+    return false;
+  }
+
+  return transaction.isDerived || transaction.installmentCurrent > 1;
 }
 
 function startOfMonth(date: Date | string) {

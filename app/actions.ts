@@ -9,6 +9,12 @@ import { getRequiredCurrentUser } from "@/lib/current-user";
 import { getPrisma } from "@/lib/prisma";
 import { stringifySummaryMeta } from "@/lib/summary-meta";
 
+function revalidateFinanceViews() {
+  revalidatePath("/");
+  revalidatePath("/fechamento");
+  revalidatePath("/cartoes");
+}
+
 const transactionSchema = z.object({
   title: z.string().min(2),
   description: z.string().optional(),
@@ -130,7 +136,7 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
       }
     });
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Item salvo com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel salvar o item.");
@@ -183,7 +189,7 @@ export async function updateTransaction(formData: FormData): Promise<ActionResul
       return errorResult("Lancamento nao encontrado para edicao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Item editado com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel editar o item.");
@@ -207,7 +213,7 @@ export async function deleteTransaction(formData: FormData): Promise<ActionResul
       return errorResult("Lancamento nao encontrado para exclusao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Item excluido com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel excluir o item.");
@@ -248,7 +254,7 @@ export async function createInvestment(formData: FormData): Promise<ActionResult
       }
     });
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Investimento salvo com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel salvar o investimento.");
@@ -294,7 +300,7 @@ export async function updateInvestment(formData: FormData): Promise<ActionResult
       return errorResult("Investimento nao encontrado para edicao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Investimento editado com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel editar o investimento.");
@@ -318,7 +324,7 @@ export async function deleteInvestment(formData: FormData): Promise<ActionResult
       return errorResult("Investimento nao encontrado para exclusao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Investimento excluido com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel excluir o investimento.");
@@ -370,7 +376,7 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
       }
     });
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Fechamento salvo com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel salvar o fechamento.");
@@ -400,7 +406,7 @@ export async function createCreditCard(formData: FormData): Promise<ActionResult
       }
     });
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Cartao salvo com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel salvar o cartao.");
@@ -438,7 +444,7 @@ export async function updateCreditCard(formData: FormData): Promise<ActionResult
       return errorResult("Cartao nao encontrado para edicao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Cartao editado com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel editar o cartao.");
@@ -462,7 +468,7 @@ export async function deleteCreditCard(formData: FormData): Promise<ActionResult
       return errorResult("Cartao nao encontrado para exclusao.");
     }
 
-    revalidatePath("/");
+    revalidateFinanceViews();
     return successResult("Cartao excluido com sucesso.");
   } catch (error) {
     return toActionError(error, "Nao foi possivel excluir o cartao.");
