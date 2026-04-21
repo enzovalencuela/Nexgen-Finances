@@ -14,6 +14,8 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const prisma = getPrisma();
   const selectedMonth = month ?? toMonthInput();
   const { start, end } = monthBounds(selectedMonth);
+  const previousMonth = toMonthInput(new Date(start.getFullYear(), start.getMonth() - 1, 1));
+  const previousMonthBounds = monthBounds(previousMonth);
 
   const where: Prisma.TransactionWhereInput = {
     userId,
@@ -23,7 +25,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investments, summary, creditCards] = await Promise.all([
+  const [transactions, investments, summary, creditCards, previousSummary] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -57,15 +59,31 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     prisma.creditCard.findMany({
       where: { userId },
       orderBy: { name: "asc" }
+    }),
+    prisma.summary.findFirst({
+      where: {
+        userId,
+        monthReference: {
+          gte: previousMonthBounds.start,
+          lte: previousMonthBounds.end
+        }
+      }
     })
   ]);
 
   const typedTransactions = transactions as TransactionWithCard[];
   const summaryMeta = parseSummaryMeta(summary?.note);
 
-  const entries = typedTransactions.filter(
+  const persistedEntries = typedTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID
   );
+  const carryoverEntry = buildCarryoverEntry({
+    userId,
+    currentMonthStart: start,
+    previousSummary,
+    persistedEntries
+  });
+  const entries = sortTransactionsByDateDesc(carryoverEntry ? [...persistedEntries, carryoverEntry] : persistedEntries);
   const payables = typedTransactions.filter((transaction) => transaction.type === TransactionType.BILL);
   const receivables = typedTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING
@@ -103,7 +121,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       return acc;
     },
     {
-      entries: 0,
+      entries: carryoverEntry ? Number(carryoverEntry.amount) : 0,
       payables: 0,
       receivables: 0,
       expenses: 0,
@@ -127,6 +145,78 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     creditCards,
     investmentOverview
   };
+}
+
+function buildCarryoverEntry({
+  userId,
+  currentMonthStart,
+  previousSummary,
+  persistedEntries
+}: {
+  userId: string;
+  currentMonthStart: Date;
+  previousSummary: { cashBalance: Prisma.Decimal; digitalBalance: Prisma.Decimal } | null;
+  persistedEntries: TransactionWithCard[];
+}): TransactionWithCard | null {
+  if (!previousSummary || hasCarryoverEntry(persistedEntries)) {
+    return null;
+  }
+
+  const amount = Number(previousSummary.cashBalance ?? 0) + Number(previousSummary.digitalBalance ?? 0);
+
+  if (amount <= 0) {
+    return null;
+  }
+
+  return {
+    id: `carryover-${userId}-${currentMonthStart.toISOString().slice(0, 7)}`,
+    userId,
+    title: "Mes Passado",
+    description: "Entrada automatica baseada na sobra do mes anterior.",
+    type: TransactionType.INCOME,
+    category: TransactionCategory.OTHER,
+    amount: new Prisma.Decimal(amount),
+    transactionDate: currentMonthStart,
+    status: TransactionStatus.PAID,
+    source: "Mes Passado",
+    isCreditCard: false,
+    installmentCurrent: null,
+    installmentTotal: null,
+    creditCardId: null,
+    creditCard: null,
+    createdAt: currentMonthStart,
+    updatedAt: currentMonthStart,
+    isDerived: true
+  };
+}
+
+function hasCarryoverEntry(entries: TransactionWithCard[]) {
+  return entries.some((entry) => {
+    const title = normalizeEntryText(entry.title);
+    const source = normalizeEntryText(entry.source);
+
+    return title.includes("mes passado") || source.includes("mes passado") || title.includes("saldo anterior") || source.includes("saldo anterior");
+  });
+}
+
+function normalizeEntryText(value?: string | null) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function sortTransactionsByDateDesc(transactions: TransactionWithCard[]) {
+  return [...transactions].sort((left, right) => {
+    const dateDiff = new Date(right.transactionDate).getTime() - new Date(left.transactionDate).getTime();
+
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+
+    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+  });
 }
 
 function groupTransactions(transactions: TransactionWithCard[], preferredOrder: string[]): StatementBucket[] {
