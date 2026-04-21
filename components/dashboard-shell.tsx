@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, BadgeDollarSign, Landmark, PiggyBank, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, Landmark, NotebookText, PiggyBank, Wallet } from "lucide-react";
 import Image from "next/image";
 import type { CreditCard, Investment, Summary, User } from "@prisma/client";
 
@@ -8,6 +8,7 @@ import type { MonthlyStatementData, StatementBucket, TransactionWithCard } from 
 import { cn, formatCurrency } from "@/lib/utils";
 import { EditableInvestmentCard } from "@/components/editable-investment-card";
 import { EditableTransactionCard } from "@/components/editable-transaction-card";
+import { ClassificationPieChart, OverviewBarChart } from "@/components/monthly-charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Panel } from "@/components/ui/panel";
@@ -15,46 +16,58 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { Select } from "@/components/ui/select";
 import { SignOutButton } from "@/components/sign-out-button";
 
+type TotalKey = keyof MonthlyStatementData["totals"];
+
 type Props = MonthlyStatementData & {
   user: Pick<User, "name" | "email" | "image">;
 };
 
-type SectionTheme = {
-  panel: string;
-  total: string;
+type TapeTheme = {
+  shell: string;
+  ink: string;
+  badge: string;
+  line: string;
 };
 
-const sectionThemes = {
+const tapeThemes = {
   entries: {
-    panel: "border-cyan-400/30 bg-cyan-500/5",
-    total: "text-cyan-300"
+    shell: "bg-cyan-500/10 border-cyan-400/35",
+    ink: "text-cyan-200",
+    badge: "bg-cyan-300 text-slate-950",
+    line: "bg-cyan-300"
   },
   payables: {
-    panel: "border-yellow-300/30 bg-yellow-400/5",
-    total: "text-yellow-200"
+    shell: "bg-yellow-500/10 border-yellow-300/35",
+    ink: "text-yellow-100",
+    badge: "bg-yellow-300 text-slate-950",
+    line: "bg-yellow-300"
   },
   receivables: {
-    panel: "border-sky-400/30 bg-sky-500/5",
-    total: "text-sky-300"
+    shell: "bg-sky-500/10 border-sky-300/35",
+    ink: "text-sky-100",
+    badge: "bg-sky-300 text-slate-950",
+    line: "bg-sky-300"
   },
   expenses: {
-    panel: "border-fuchsia-400/30 bg-fuchsia-500/5",
-    total: "text-fuchsia-300"
+    shell: "bg-fuchsia-500/10 border-fuchsia-400/35",
+    ink: "text-fuchsia-100",
+    badge: "bg-fuchsia-300 text-slate-950",
+    line: "bg-fuchsia-300"
   },
   investments: {
-    panel: "border-emerald-400/30 bg-emerald-500/5",
-    total: "text-emerald-300"
+    shell: "bg-emerald-500/10 border-emerald-400/35",
+    ink: "text-emerald-100",
+    badge: "bg-emerald-300 text-slate-950",
+    line: "bg-emerald-300"
   }
 } as const;
 
-const overviewCards = [
-  { key: "entries", label: "Entradas", icon: ArrowUpCircle, color: "text-accent" },
-  { key: "payables", label: "A Pagar", icon: ArrowDownCircle, color: "text-danger" },
-  { key: "expenses", label: "Contas do Mes", icon: BadgeDollarSign, color: "text-warning" },
-  { key: "leftover", label: "Sobra", icon: Wallet, color: "text-info" },
-  { key: "investmentsBRL", label: "Investimentos BRL", icon: Landmark, color: "text-info" },
-  { key: "receivables", label: "A Receber", icon: PiggyBank, color: "text-accent" }
-] as const;
+const heroCards = [
+  { key: "entries" as TotalKey, label: "Total Recebido", icon: ArrowUpCircle, color: "text-cyan-300" },
+  { key: "payables" as TotalKey, label: "Total a Pagar", icon: ArrowDownCircle, color: "text-yellow-200" },
+  { key: "receivables" as TotalKey, label: "Total a Receber", icon: PiggyBank, color: "text-sky-300" },
+  { key: "leftover" as TotalKey, label: "Total Restante", icon: Wallet, color: "text-violet-300" }
+];
 
 export function DashboardShell({
   user,
@@ -73,177 +86,202 @@ export function DashboardShell({
 }: Props) {
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <Panel className="overflow-hidden bg-grid p-6 sm:p-8">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent/10">
-                  <Image src="/favicon.ico" alt="Nexgen Finance" width={30} height={30} className="h-8 w-8 rounded-lg" />
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-6">
+        <section className="overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,16,30,0.98)_0%,rgba(10,25,48,0.96)_45%,rgba(7,16,30,0.98)_100%)] p-6 shadow-glow sm:p-8">
+          <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-accent/20 bg-accent/10">
+                  <Image src="/favicon.ico" alt="Nexgen Finance" width={34} height={34} className="h-9 w-9 rounded-lg" />
                 </div>
-                <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-accent/80">Nexgen Finance</p>
+                  <p className="mt-1 text-sm text-slate-400">Fechamento mensal inspirado no seu caderno do OneNote</p>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold text-white sm:text-4xl">
-                  Fechamento mensal de {user.name?.split(" ")[0] ?? "usuario"}.
+              <div className="space-y-3">
+                <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                  Fechamento de {selectedMonth.replace("-", "/")} com leitura direta, colorida e editavel.
                 </h1>
-                <p className="max-w-3xl text-sm leading-6 text-muted sm:text-base">
-                  Uma leitura no mesmo formato do seu documento: entradas, a pagar, a receber, contas, sobra e investimentos.
+                <p className="max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                  Cada bloco abaixo segue a logica do seu documento: entradas, a pagar, a receber, contas, sobra e investimentos. Clique em qualquer item para editar sem sair da pagina.
                 </p>
               </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {heroCards.map((card) => {
+                  const Icon = card.icon;
+                  const value = totals[card.key];
+
+                  return (
+                    <div key={card.key} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm text-slate-400">{card.label}</p>
+                          <p className="mt-4 text-3xl font-semibold text-white">{formatCurrency(value)}</p>
+                        </div>
+                        <div className={cn("rounded-2xl bg-white/5 p-3", card.color)}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <div className="mt-5 h-2 rounded-full bg-white/5">
+                        <div className={cn("h-2 rounded-full", card.color.replace("text-", "bg-"))} style={{ width: "78%" }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <FilterForm selectedMonth={selectedMonth} />
-              <SignOutButton />
-            </div>
-          </div>
-        </Panel>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {overviewCards.map((card) => {
-            const Icon = card.icon;
-            const value = totals[card.key];
-
-            return (
-              <Panel key={card.key} className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-muted">{card.label}</p>
-                    <p className="mt-3 text-2xl font-semibold text-white">{formatCurrency(value)}</p>
-                  </div>
-                  <div className={cn("rounded-2xl bg-white/5 p-3", card.color)}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+            <div className="grid gap-6">
+              <Panel className="rounded-[30px] border-white/10 bg-white/[0.04] p-5">
+                <SectionHeading
+                  eyebrow="Controles"
+                  title="Filtragem e sessao"
+                  description="Mude de mes ou encerre a sessao rapidamente."
+                />
+                <div className="mt-5 space-y-4">
+                  <FilterForm selectedMonth={selectedMonth} />
+                  <SignOutButton />
                 </div>
               </Panel>
-            );
-          })}
+
+              <Panel className="rounded-[30px] border-white/10 bg-white/[0.04] p-5">
+                <SectionHeading
+                  eyebrow="Resumo visual"
+                  title="Balanço do mes"
+                  description="Comparacao imediata entre entradas, contas, a pagar, a receber e sobra."
+                />
+                <div className="mt-4">
+                  <OverviewBarChart
+                    entries={totals.entries}
+                    payables={totals.payables}
+                    receivables={totals.receivables}
+                    expenses={totals.expenses}
+                    leftover={totals.leftover}
+                  />
+                </div>
+              </Panel>
+            </div>
+          </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
+        <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-6">
-            <Panel className="space-y-5">
-              <SectionHeading
-                eyebrow="Resumo do mes"
-                title="Visao consolidada"
-                description="Totais principais espelhando seu fechamento manual de janeiro e dos proximos meses."
-              />
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <SummaryMetric label="Salario Base" value={summaryMeta.salaryBase} subtle />
-                <SummaryMetric label="A Receber" value={totals.receivables} subtle />
-                <SummaryMetric label="A Comprar" value={summaryMeta.purchaseEstimate} subtle />
-                <SummaryMetric label="Retirado dos Investimentos" value={summaryMeta.investmentWithdrawn} subtle />
+            <Panel className="rounded-[34px] border-white/10 bg-[#0a1220] p-6">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Mapa do Fechamento</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-white">Painel de conferencia</h2>
+                </div>
+                <div className="rounded-2xl border border-violet-300/20 bg-violet-400/10 px-4 py-2 text-sm text-violet-100">
+                  Salario base: {formatCurrency(summaryMeta.salaryBase)}
+                </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <SummaryMetric label="Sobra Dinheiro" value={Number(summary?.cashBalance ?? 0)} subtle />
-                <SummaryMetric label="Sobra Digital" value={Number(summary?.digitalBalance ?? 0)} subtle />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <MetaStrip label="A comprar" value={summaryMeta.purchaseEstimate} tone="warning" />
+                <MetaStrip label="Retirado dos investimentos" value={summaryMeta.investmentWithdrawn} tone="info" />
+                <MetaStrip label="Sobra em dinheiro" value={Number(summary?.cashBalance ?? 0)} tone="neutral" />
+                <MetaStrip label="Sobra digital" value={Number(summary?.digitalBalance ?? 0)} tone="neutral" />
+              </div>
+
+              <div className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+                <SectionHeading
+                  eyebrow="Classificacao"
+                  title="Leitura dos gastos por cor"
+                  description="Distribuicao visual semelhante ao destaque que voce usa no documento."
+                />
+                <div className="mt-5">
+                  <ClassificationPieChart
+                    necessary={classificationTotals.necessary}
+                    optional={classificationTotals.optional}
+                    leisure={classificationTotals.leisure}
+                    investment={classificationTotals.investment}
+                  />
+                </div>
               </div>
             </Panel>
 
-            <MonthlySection
+            <LedgerSection
+              theme={tapeThemes.entries}
               eyebrow="Entradas"
-              title="Dinheiro que entrou no mes"
-              description={`Total recebido: ${formatCurrency(totals.entries)}`}
-              items={entries}
-              emptyMessage="Nenhuma entrada registrada neste periodo."
-              creditCards={creditCards}
-              theme={sectionThemes.entries}
-            />
+              title={`Total recebido: ${formatCurrency(totals.entries)}`}
+              subtitle="Bloco de entradas do mes, com edicao direta de cada linha."
+            >
+              <TransactionList items={entries} emptyMessage="Nenhuma entrada registrada neste periodo." creditCards={creditCards} accentClass={tapeThemes.entries.ink} />
+            </LedgerSection>
 
-            <BucketSection
+            <LedgerSection
+              theme={tapeThemes.payables}
               eyebrow="A pagar"
-              title="Compromissos em aberto"
-              description={`Total a pagar: ${formatCurrency(totals.payables)}`}
-              buckets={payableBuckets}
-              emptyMessage="Nenhum valor pendente neste periodo."
-              creditCards={creditCards}
-              theme={sectionThemes.payables}
-            />
+              title={`Total a pagar: ${formatCurrency(totals.payables)}`}
+              subtitle="Separado por cartao, contas da Nicoli e investimentos pendentes."
+            >
+              <BucketList buckets={payableBuckets} emptyMessage="Nenhum valor pendente neste periodo." creditCards={creditCards} accentClass={tapeThemes.payables.ink} />
+            </LedgerSection>
 
-            <BucketSection
+            <LedgerSection
+              theme={tapeThemes.receivables}
               eyebrow="A receber"
-              title="Valores que ainda vao entrar"
-              description={`Total a receber: ${formatCurrency(totals.receivables)}`}
-              buckets={receivableBuckets}
-              emptyMessage="Nenhum valor a receber neste periodo."
-              creditCards={creditCards}
-              theme={sectionThemes.receivables}
-            />
+              title={`Total a receber: ${formatCurrency(totals.receivables)}`}
+              subtitle="Valores que ainda vao entrar e precisam ser acompanhados."
+            >
+              <BucketList buckets={receivableBuckets} emptyMessage="Nenhum valor a receber neste periodo." creditCards={creditCards} accentClass={tapeThemes.receivables.ink} />
+            </LedgerSection>
 
-            <Panel className={cn("space-y-5", sectionThemes.expenses.panel)}>
-              <SectionHeading
-                eyebrow="Contas"
-                title="Gastos efetivos do mes"
-                description={`Total de contas do mes: ${formatCurrency(totals.expenses)}`}
-              />
+            <LedgerSection
+              theme={tapeThemes.expenses}
+              eyebrow="Contas"
+              title={`Total gasto: ${formatCurrency(totals.expenses)}`}
+              subtitle="Gastos efetivos do mes, agrupados do jeito que voce costuma organizar no caderno."
+            >
+              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste periodo." creditCards={creditCards} accentClass={tapeThemes.expenses.ink} />
+            </LedgerSection>
 
-              <BucketList buckets={expenseBuckets} emptyMessage="Nenhuma conta paga neste periodo." creditCards={creditCards} accentClass={sectionThemes.expenses.total} />
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <SummaryMetric label="Gastos Necessarios" value={classificationTotals.necessary} subtle />
-                <SummaryMetric label="Nao tao necessarios" value={classificationTotals.optional} subtle />
-                <SummaryMetric label="Lazer" value={classificationTotals.leisure} subtle />
-                <SummaryMetric label="Investimentos" value={classificationTotals.investment} subtle />
-              </div>
-            </Panel>
-
-            <Panel className={cn("space-y-5", sectionThemes.investments.panel)}>
-              <SectionHeading
-                eyebrow="Investimentos"
-                title="Carteira do mes"
-                description={`Total: ${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`}
-              />
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <SummaryMetric label="Investido em BRL" value={investmentOverview.totalBRL} subtle />
-                <SummaryMetric label="Investido em USD" value={investmentOverview.totalUSD} currency="USD" subtle />
-                <SummaryMetric label="Ativos cadastrados" value={investments.length} numeric subtle />
-              </div>
-
+            <LedgerSection
+              theme={tapeThemes.investments}
+              eyebrow="Investimentos"
+              title={`${formatCurrency(investmentOverview.totalBRL)} + ${formatCurrency(investmentOverview.totalUSD, "USD")}`}
+              subtitle="Ativos do mes com edicao inline para ajustes rapidos."
+            >
               <InvestmentList investments={investments} />
-            </Panel>
+            </LedgerSection>
           </div>
 
           <div className="space-y-6">
-            <Panel className="space-y-5">
-              <SectionHeading
-                eyebrow="Lancamento rapido"
-                title="Novo item do fechamento"
-                description="Use este formulario para registrar entradas, contas, parcelas, valores a receber e outros movimentos."
-              />
-              <TransactionForm creditCards={creditCards} />
-            </Panel>
+            <Panel className="rounded-[34px] border-white/10 bg-[#0a1220] p-6">
+              <div className="mb-5 flex items-center gap-3">
+                <div className="rounded-2xl bg-accent/10 p-3 text-accent">
+                  <NotebookText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-accent/80">Editor Rapido</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-white">Adicionar e ajustar</h2>
+                </div>
+              </div>
 
-            <Panel className="space-y-5">
-              <SectionHeading
-                eyebrow="Cartoes"
-                title="Controle intuitivo de parcelas"
-                description="Mantenha os cartoes separados e registre parcela atual/total para acompanhar 5/12, 1/2 e similares."
-              />
-              <CreditCardForm />
-              <CreditCardList creditCards={creditCards} />
-            </Panel>
+              <div className="space-y-6">
+                <StickyPanel title="Novo item" tone="cyan">
+                  <TransactionForm creditCards={creditCards} />
+                </StickyPanel>
 
-            <Panel className="space-y-5">
-              <SectionHeading
-                eyebrow="Fechamento mensal"
-                title="Sobra, salario e observacoes"
-                description="Consolide salario base, sobra em dinheiro, sobra digital, compras planejadas e retiradas de investimentos."
-              />
-              <SummaryForm selectedMonth={selectedMonth} summary={summary} summaryMeta={summaryMeta} />
-            </Panel>
+                <StickyPanel title="Cartoes" tone="yellow">
+                  <CreditCardForm />
+                  <div className="mt-4">
+                    <CreditCardList creditCards={creditCards} />
+                  </div>
+                </StickyPanel>
 
-            <Panel className="space-y-5">
-              <SectionHeading
-                eyebrow="Adicionar ativo"
-                title="Investimento"
-                description="Cadastre CDB, LCI, fundos, cripto, Binance, MB e posicao em USD."
-              />
-              <InvestmentForm />
+                <StickyPanel title="Fechamento mensal" tone="violet">
+                  <SummaryForm selectedMonth={selectedMonth} summary={summary} summaryMeta={summaryMeta} />
+                </StickyPanel>
+
+                <StickyPanel title="Investimento" tone="green">
+                  <InvestmentForm />
+                </StickyPanel>
+              </div>
             </Panel>
           </div>
         </section>
@@ -257,80 +295,70 @@ function FilterForm({ selectedMonth }: { selectedMonth: string }) {
     <form className="flex flex-wrap gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
       <Input type="month" name="month" defaultValue={selectedMonth} className="min-w-40 bg-transparent" />
       <Button type="submit" variant="secondary">
-        Filtrar mes
+        Abrir mes
       </Button>
     </form>
   );
 }
 
-function SummaryMetric({
-  label,
-  value,
-  subtle,
-  currency = "BRL",
-  numeric = false
-}: {
-  label: string;
-  value: number;
-  subtle?: boolean;
-  currency?: "BRL" | "USD";
-  numeric?: boolean;
-}) {
+function MetaStrip({ label, value, tone }: { label: string; value: number; tone: "warning" | "info" | "neutral" }) {
+  const toneClasses = {
+    warning: "border-yellow-300/25 bg-yellow-400/8 text-yellow-100",
+    info: "border-cyan-300/25 bg-cyan-400/8 text-cyan-100",
+    neutral: "border-white/10 bg-white/[0.03] text-white"
+  };
+
   return (
-    <div className={cn("rounded-3xl border p-4", subtle ? "border-white/8 bg-white/[0.03]" : "border-accent/15 bg-accent/5")}>
-      <p className="text-sm text-muted">{label}</p>
-      <p className="mt-3 text-xl font-semibold text-white">{numeric ? value : formatCurrency(value, currency)}</p>
+    <div className={cn("rounded-3xl border px-5 py-4", toneClasses[tone])}>
+      <p className="text-xs uppercase tracking-[0.24em] opacity-70">{label}</p>
+      <p className="mt-3 text-2xl font-semibold">{formatCurrency(value)}</p>
     </div>
   );
 }
 
-function MonthlySection({
+function LedgerSection({
+  theme,
   eyebrow,
   title,
-  description,
-  items,
-  emptyMessage,
-  creditCards,
-  theme
+  subtitle,
+  children
 }: {
+  theme: TapeTheme;
   eyebrow: string;
   title: string;
-  description: string;
-  items: TransactionWithCard[];
-  emptyMessage: string;
-  creditCards: CreditCard[];
-  theme: SectionTheme;
+  subtitle: string;
+  children: React.ReactNode;
 }) {
   return (
-    <Panel className={cn("space-y-5", theme.panel)}>
-      <SectionHeading eyebrow={eyebrow} title={title} description={description} />
-      <TransactionList items={items} emptyMessage={emptyMessage} creditCards={creditCards} accentClass={theme.total} />
-    </Panel>
+    <section className={cn("rounded-[34px] border p-6 shadow-glow", theme.shell)}>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <div className={cn("mb-4 h-2 w-24 rounded-full", theme.line)} />
+          <p className={cn("text-xs uppercase tracking-[0.34em]", theme.ink)}>{eyebrow}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">{title}</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-300">{subtitle}</p>
+        </div>
+        <span className={cn("rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]", theme.badge)}>{eyebrow}</span>
+      </div>
+
+      {children}
+    </section>
   );
 }
 
-function BucketSection({
-  eyebrow,
-  title,
-  description,
-  buckets,
-  emptyMessage,
-  creditCards,
-  theme
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  buckets: StatementBucket[];
-  emptyMessage: string;
-  creditCards: CreditCard[];
-  theme: SectionTheme;
-}) {
+function StickyPanel({ title, tone, children }: { title: string; tone: "cyan" | "yellow" | "violet" | "green"; children: React.ReactNode }) {
+  const tones = {
+    cyan: "border-cyan-400/30 bg-cyan-500/6",
+    yellow: "border-yellow-300/30 bg-yellow-400/6",
+    violet: "border-violet-300/30 bg-violet-400/6",
+    green: "border-emerald-400/30 bg-emerald-500/6"
+  };
+
   return (
-    <Panel className={cn("space-y-5", theme.panel)}>
-      <SectionHeading eyebrow={eyebrow} title={title} description={description} />
-      <BucketList buckets={buckets} emptyMessage={emptyMessage} creditCards={creditCards} accentClass={theme.total} />
-    </Panel>
+    <div className={cn("rounded-[28px] border p-5", tones[tone])}>
+      <h3 className="mb-4 text-lg font-semibold text-white">{title}</h3>
+      {children}
+    </div>
   );
 }
 
@@ -346,16 +374,16 @@ function BucketList({
   accentClass: string;
 }) {
   if (buckets.length === 0) {
-    return <p className="text-sm text-muted">{emptyMessage}</p>;
+    return <p className="text-sm text-slate-300">{emptyMessage}</p>;
   }
 
   return (
     <div className="space-y-4">
       {buckets.map((bucket) => (
-        <div key={bucket.key} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="mb-4 flex items-center justify-between gap-4 border-b border-white/8 pb-4">
+        <div key={bucket.key} className="rounded-[26px] border border-white/10 bg-slate-950/15 p-4">
+          <div className="mb-4 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
             <h3 className="text-lg font-semibold text-white">{bucket.label}</h3>
-            <p className={cn("text-base font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
+            <p className={cn("text-lg font-semibold", accentClass)}>{formatCurrency(bucket.total)}</p>
           </div>
           <TransactionList items={bucket.items} emptyMessage="Nenhum item." creditCards={creditCards} accentClass={accentClass} compact />
         </div>
@@ -378,7 +406,7 @@ function TransactionList({
   compact?: boolean;
 }) {
   if (items.length === 0) {
-    return <p className="text-sm text-muted">{emptyMessage}</p>;
+    return <p className="text-sm text-slate-300">{emptyMessage}</p>;
   }
 
   return (
@@ -469,7 +497,7 @@ function CreditCardForm() {
 
 function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
   if (creditCards.length === 0) {
-    return <p className="text-sm text-muted">Nenhum cartao cadastrado ainda.</p>;
+    return <p className="text-sm text-slate-300">Nenhum cartao cadastrado ainda.</p>;
   }
 
   return (
@@ -479,9 +507,9 @@ function CreditCardList({ creditCards }: { creditCards: CreditCard[] }) {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="font-medium text-white">{creditCard.name}</p>
-              <p className="text-sm text-muted">{creditCard.brand ?? "Sem bandeira"}</p>
+              <p className="text-sm text-slate-300">{creditCard.brand ?? "Sem bandeira"}</p>
             </div>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-slate-300">
               Fecha dia {creditCard.closingDay ?? "-"} • vence dia {creditCard.dueDay ?? "-"}
             </p>
           </div>
@@ -528,7 +556,7 @@ function InvestmentForm() {
 
 function InvestmentList({ investments }: { investments: Investment[] }) {
   if (investments.length === 0) {
-    return <p className="text-sm text-muted">Nenhum ativo registrado neste periodo.</p>;
+    return <p className="text-sm text-slate-300">Nenhum ativo registrado neste periodo.</p>;
   }
 
   return (
@@ -553,46 +581,14 @@ function SummaryForm({
     <form action={upsertSummary} className="grid gap-3">
       <Input type="month" name="monthReference" defaultValue={selectedMonth} required />
       <div className="grid gap-3 md:grid-cols-2">
-        <Input
-          name="salaryBase"
-          type="number"
-          step="0.01"
-          placeholder="Salario base"
-          defaultValue={summaryMeta.salaryBase}
-        />
-        <Input
-          name="purchaseEstimate"
-          type="number"
-          step="0.01"
-          placeholder="A comprar"
-          defaultValue={summaryMeta.purchaseEstimate}
-        />
+        <Input name="salaryBase" type="number" step="0.01" placeholder="Salario base" defaultValue={summaryMeta.salaryBase} />
+        <Input name="purchaseEstimate" type="number" step="0.01" placeholder="A comprar" defaultValue={summaryMeta.purchaseEstimate} />
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <Input
-          name="cashBalance"
-          type="number"
-          step="0.01"
-          placeholder="Sobra em dinheiro"
-          defaultValue={Number(summary?.cashBalance ?? 0)}
-          required
-        />
-        <Input
-          name="digitalBalance"
-          type="number"
-          step="0.01"
-          placeholder="Sobra digital"
-          defaultValue={Number(summary?.digitalBalance ?? 0)}
-          required
-        />
+        <Input name="cashBalance" type="number" step="0.01" placeholder="Sobra em dinheiro" defaultValue={Number(summary?.cashBalance ?? 0)} required />
+        <Input name="digitalBalance" type="number" step="0.01" placeholder="Sobra digital" defaultValue={Number(summary?.digitalBalance ?? 0)} required />
       </div>
-      <Input
-        name="investmentWithdrawn"
-        type="number"
-        step="0.01"
-        placeholder="Retirado dos investimentos"
-        defaultValue={summaryMeta.investmentWithdrawn}
-      />
+      <Input name="investmentWithdrawn" type="number" step="0.01" placeholder="Retirado dos investimentos" defaultValue={summaryMeta.investmentWithdrawn} />
       <Input name="noteText" placeholder="Observacao" defaultValue={summaryMeta.noteText} />
       <Button type="submit" variant="secondary">
         Salvar fechamento
