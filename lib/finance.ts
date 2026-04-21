@@ -44,7 +44,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins, pendingCardBills] = await Promise.all([
+  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins, pendingCardBills, pendingReceivables] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -134,6 +134,22 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       orderBy: {
         transactionDate: "desc"
       }
+    }),
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        type: TransactionType.INCOME,
+        status: TransactionStatus.PENDING,
+        transactionDate: {
+          lt: start
+        }
+      },
+      include: {
+        creditCard: true
+      },
+      orderBy: {
+        transactionDate: "desc"
+      }
     })
   ]);
 
@@ -146,6 +162,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const rolledOverCardBills = buildRolledOverCardBills({
     selectedMonthStart: start,
     pendingCardBills: pendingCardBills as TransactionWithCard[]
+  });
+  const rolledOverReceivables = buildRolledOverReceivables({
+    selectedMonthStart: start,
+    pendingReceivables: pendingReceivables as TransactionWithCard[]
   });
   const monthTransactions = sortTransactionsByDateDesc([...typedTransactions, ...generatedInstallments]);
   const investments = collapseInvestmentHistory(investmentHistory);
@@ -169,9 +189,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     ...rolledOverCardBills,
     ...payableAdjustments
   ]);
-  const receivables = monthTransactions.filter(
-    (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING
-  );
+  const receivables = sortTransactionsByDateDesc([
+    ...monthTransactions.filter((transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING),
+    ...rolledOverReceivables
+  ]);
   const expenses = monthTransactions.filter(
     (transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID
   );
@@ -329,6 +350,22 @@ function buildRolledOverCardBills({
       ...transaction,
       isDerived: true,
       derivedKind: "overdueCardBill"
+    }));
+}
+
+function buildRolledOverReceivables({
+  selectedMonthStart,
+  pendingReceivables
+}: {
+  selectedMonthStart: Date;
+  pendingReceivables: TransactionWithCard[];
+}): TransactionWithCard[] {
+  return pendingReceivables
+    .filter((transaction) => diffInMonths(startOfMonth(transaction.transactionDate), selectedMonthStart) > 0)
+    .map<TransactionWithCard>((transaction) => ({
+      ...transaction,
+      isDerived: true,
+      derivedKind: "overdueReceivable"
     }));
 }
 
