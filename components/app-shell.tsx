@@ -10,7 +10,7 @@ import { formatMonthLabel } from "@/lib/utils";
 type Props = {
   user: Pick<User, "name" | "email" | "image">;
   selectedMonth: string;
-  currentPath: "/" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
+  currentPath: "/painel" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
   title: string;
   description: string;
   children: React.ReactNode;

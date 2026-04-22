@@ -16,9 +16,20 @@ const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
+      const publicRoutes = new Set([
+        "/",
+        "/login",
+        "/controle-financeiro-pessoal",
+        "/fechamento-mensal",
+        "/controle-de-cartoes",
+        "/controle-de-investimentos",
+        "/robots.txt",
+        "/sitemap.xml"
+      ]);
       const isLoginPage = nextUrl.pathname.startsWith("/login");
+      const isPublicRoute = publicRoutes.has(nextUrl.pathname);
 
-      if (isLoginPage) {
+      if (isLoginPage || isPublicRoute) {
         return true;
       }
 

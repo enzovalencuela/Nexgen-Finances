@@ -18,8 +18,8 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
     <AppShell
       user={user}
       selectedMonth={selectedMonth}
-      currentPath="/"
-      title="Página inicial"
+      currentPath="/painel"
+      title="Painel"
       description="Uma visão simples para abrir o mês e localizar rapidamente o que exige atenção."
     >
       <div className="space-y-8">

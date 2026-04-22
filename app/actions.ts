@@ -10,7 +10,7 @@ import { getPrisma } from "@/lib/prisma";
 import { stringifySummaryMeta } from "@/lib/summary-meta";
 
 function revalidateFinanceViews() {
-  revalidatePath("/");
+  revalidatePath("/painel");
   revalidatePath("/fechamento");
   revalidatePath("/cartoes");
 }

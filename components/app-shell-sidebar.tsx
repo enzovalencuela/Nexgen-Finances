@@ -15,12 +15,12 @@ type Props = {
     image: string | null;
   };
   accountActions: React.ReactNode;
-  currentPath: "/" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
+  currentPath: "/painel" | "/fechamento" | "/cartoes" | `/cartoes/${string}`;
   selectedMonth: string;
 };
 
 const navItems = [
-  { href: "/" as const, label: "Início", icon: LayoutGrid },
+  { href: "/painel" as const, label: "Painel", icon: LayoutGrid },
   { href: "/fechamento" as const, label: "Fechamento", icon: NotebookTabs },
   { href: "/cartoes" as const, label: "Cartões", icon: CreditCard }
 ];

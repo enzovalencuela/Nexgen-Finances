@@ -16,14 +16,17 @@ export function LoginCard() {
           <p className="text-xs uppercase tracking-[0.3em] text-accent/80 dark:text-violet-300">Nexgen Finance</p>
           <h1 className="text-[1.75rem] font-semibold text-slate-900 dark:text-slate-100">Controle financeiro com acesso seguro</h1>
           <p className="text-[13px] leading-6 text-slate-600 dark:text-slate-400">
-            Login com Google via NextAuth, sessão persistida e dados separados por usuário.
+            Organize seu controle financeiro pessoal com fechamento mensal, cartões, faturas, contas a pagar, valores a receber e investimentos em um fluxo simples.
+          </p>
+          <p className="text-[13px] leading-6 text-slate-600 dark:text-slate-400">
+            Login com Google, sessão persistida e dados separados por usuário.
           </p>
         </div>
 
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/" });
+            await signIn("google", { redirectTo: "/painel" });
           }}
         >
           <Button type="submit" className="w-full">
