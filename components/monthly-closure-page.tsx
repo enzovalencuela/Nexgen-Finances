@@ -5,6 +5,7 @@ import { BucketList, CreditCardList, InvestmentList, TransactionList } from "@/c
 import { CreditCardForm, InvestmentForm, SummaryForm } from "@/components/finance-forms";
 import { ClassificationPieChart } from "@/components/monthly-charts";
 import { TransactionForm } from "@/components/transaction-form";
+import { CollapsibleBox } from "@/components/ui/collapsible-box";
 import type { MonthlyStatementData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -133,13 +134,15 @@ function NotebookBlock({ title, totalLabel, tone, className, children }: { title
   };
 
   return (
-    <section className={className}>
-      <div className="mb-3">
-        <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">{title}:</h2>
-        {totalLabel ? <p className="mt-1 inline-block bg-cyan-200 px-1.5 py-0.5 text-[13px] font-semibold text-slate-900 dark:bg-cyan-900/50 dark:text-cyan-50">{totalLabel}</p> : null}
-      </div>
+    <CollapsibleBox
+      title={title}
+      className={className}
+      summaryRight={
+        totalLabel ? <p className="inline-block bg-cyan-200 px-1.5 py-0.5 text-[13px] font-semibold text-slate-900 dark:bg-cyan-900/50 dark:text-cyan-50">{totalLabel}</p> : null
+      }
+    >
       <div className={`rounded-md border p-3 ${toneClasses[tone]}`}>{children}</div>
-    </section>
+    </CollapsibleBox>
   );
 }
 

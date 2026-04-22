@@ -5,6 +5,7 @@ import type { CreditCard as CreditCardModel, User } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { TransactionList } from "@/components/finance-lists";
 import { TransactionForm } from "@/components/transaction-form";
+import { CollapsibleBox } from "@/components/ui/collapsible-box";
 import type { CardInvoiceView, MonthlyStatementData } from "@/lib/types";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
@@ -42,9 +43,8 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
         </div>
 
         {activeInvoice ? (
-          <section>
-            <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Fatura atual:</h2>
-            <div className="mt-3 grid gap-3 xl:grid-cols-4">
+          <CollapsibleBox title="Fatura atual">
+            <div className="grid gap-3 xl:grid-cols-4">
               <InfoCell label="Mês" value={activeInvoice.monthLabel} />
               <InfoCell label="Status" value={statusLabels[activeInvoice.status]} warning={activeInvoice.status === "overdue"} />
               <InfoCell label="Fatura" value={formatCurrency(activeInvoice.invoiceTotal)} />
@@ -54,14 +54,13 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
               <InfoCell label="Atrasado" value={formatCurrency(activeInvoice.overdueTotal)} warning={activeInvoice.overdueTotal > 0} />
               <InfoCell label="Pagamentos" value={formatCurrency(activeInvoice.paymentsTotal)} success={activeInvoice.paymentsTotal > 0} />
             </div>
-          </section>
+          </CollapsibleBox>
         ) : null}
 
         <section className="grid gap-8 xl:grid-cols-[1fr_320px]">
           <div className="space-y-8">
-            <section>
-              <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Histórico:</h2>
-              <div className="mt-3 divide-y divide-slate-200 rounded-md border border-slate-300 bg-white dark:divide-slate-800 dark:border-slate-700 dark:bg-slate-900">
+            <CollapsibleBox title="Histórico">
+              <div className="divide-y divide-slate-200 rounded-md border border-slate-300 bg-white dark:divide-slate-800 dark:border-slate-700 dark:bg-slate-900">
                 {timeline.map((invoice) => (
                   <div key={`${invoice.creditCard.id}-${invoice.monthReference}`} className="flex flex-col gap-2 px-4 py-3 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -75,12 +74,11 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
                   </div>
                 ))}
               </div>
-            </section>
+            </CollapsibleBox>
 
             {activeInvoice ? (
-              <section>
-                <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Composição:</h2>
-                <div className="mt-3 grid gap-4 xl:grid-cols-2">
+              <CollapsibleBox title="Composição">
+                <div className="grid gap-4 xl:grid-cols-2">
                   {activeInvoice.sections.map((section) => (
                     <div key={section.key} className="rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                       <div className="mb-3 flex items-start justify-between gap-3 border-b border-slate-200 pb-2 dark:border-slate-800">
@@ -101,24 +99,22 @@ export function CardDetailPage({ user, selectedMonth, creditCards, cardInvoices,
                     </div>
                   ))}
                 </div>
-              </section>
+              </CollapsibleBox>
             ) : null}
           </div>
 
           <div className="space-y-8">
-            <section>
-              <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Nova compra:</h2>
-              <div className="mt-3 rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <CollapsibleBox title="Nova compra">
+              <div className="rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                 <TransactionForm creditCards={[selectedCard]} mode="cardPurchase" />
               </div>
-            </section>
+            </CollapsibleBox>
 
-            <section>
-              <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">Pagamento:</h2>
-              <div className="mt-3 rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <CollapsibleBox title="Pagamento">
+              <div className="rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                 <TransactionForm creditCards={[selectedCard]} mode="cardPayment" />
               </div>
-            </section>
+            </CollapsibleBox>
           </div>
         </section>
       </div>

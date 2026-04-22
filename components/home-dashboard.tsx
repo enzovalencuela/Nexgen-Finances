@@ -3,6 +3,7 @@ import type { User } from "@prisma/client";
 
 import { AppShell } from "@/components/app-shell";
 import { OverviewBarChart } from "@/components/monthly-charts";
+import { CollapsibleBox } from "@/components/ui/collapsible-box";
 import type { MonthlyStatementData } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -73,10 +74,9 @@ export function HomeDashboard({ user, selectedMonth, totals, payableBuckets, rec
 
 function SimpleBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
-      <h2 className="text-[1rem] font-bold uppercase text-slate-900 dark:text-slate-100">{title}:</h2>
-      <div className="mt-3 rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">{children}</div>
-    </section>
+    <CollapsibleBox title={title}>
+      <div className="rounded-md border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">{children}</div>
+    </CollapsibleBox>
   );
 }
 
