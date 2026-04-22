@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { auth } from "@/lib/auth";
+
 const publicLinks = [
   { href: "/controle-financeiro-pessoal", label: "Controle financeiro" },
   { href: "/fechamento-mensal", label: "Fechamento mensal" },
@@ -8,7 +10,10 @@ const publicLinks = [
   { href: "/controle-de-investimentos", label: "Investimentos" }
 ];
 
-export function PublicSiteShell({ children }: { children: React.ReactNode }) {
+export async function PublicSiteShell({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+
   return (
     <main className="min-h-screen bg-[#f5f2ec] text-slate-900 dark:bg-[#111318] dark:text-slate-100">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
@@ -37,9 +42,11 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
             </nav>
 
             <div className="flex flex-wrap gap-2">
-              <Link href="/login" className="rounded-lg bg-violet-600 px-4 py-2 text-[13px] font-medium text-white hover:bg-violet-700">
-                Entrar
-              </Link>
+              {!isLoggedIn ? (
+                <Link href="/login" className="rounded-lg bg-violet-600 px-4 py-2 text-[13px] font-medium text-white hover:bg-violet-700">
+                  Entrar
+                </Link>
+              ) : null}
               <Link href="/painel" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-[13px] font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800">
                 Painel
               </Link>
