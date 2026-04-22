@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 
 import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -51,6 +52,9 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [absoluteUrl(siteConfig.ogImage)]
   },
+  verification: {
+    google: "oK_JHebRSmKGBc-6v3wO2Jb7Cdgg7Cx9tesvePaZs2c"
+  },
   icons: {
     icon: [{ url: "/favicon.ico?v=2", sizes: "any", type: "image/x-icon" }],
     shortcut: ["/favicon.ico?v=2"]
@@ -61,6 +65,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-FEN0VS1X7L" strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', 'G-FEN0VS1X7L');
+          `}
+        </Script>
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
