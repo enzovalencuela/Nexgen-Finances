@@ -7,7 +7,7 @@ import { z } from "zod";
 import { errorResult, successResult, type ActionResult } from "@/lib/action-result";
 import { getRequiredCurrentUser } from "@/lib/current-user";
 import { getPrisma } from "@/lib/prisma";
-import { stringifySummaryMeta } from "@/lib/summary-meta";
+import { parseSummaryMeta, stringifySummaryMeta } from "@/lib/summary-meta";
 
 function revalidateFinanceViews() {
   revalidatePath("/painel");
@@ -355,26 +355,56 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
     const [year, month] = parsed.monthReference.split("-").map(Number);
     const monthReference = new Date(year, month - 1, 1);
 
-    await prisma.summary.upsert({
+    const futureSummaries = await prisma.summary.findMany({
       where: {
-        userId_monthReference: {
-          userId,
-          monthReference
+        userId,
+        monthReference: {
+          gt: monthReference
         }
       },
-      update: {
-        cashBalance: parsed.cashBalance,
-        digitalBalance: parsed.digitalBalance,
-        note
-      },
-      create: {
-        userId,
-        monthReference,
-        cashBalance: parsed.cashBalance,
-        digitalBalance: parsed.digitalBalance,
-        note
+      select: {
+        id: true,
+        note: true
       }
     });
+
+    await prisma.$transaction([
+      prisma.summary.upsert({
+        where: {
+          userId_monthReference: {
+            userId,
+            monthReference
+          }
+        },
+        update: {
+          cashBalance: parsed.cashBalance,
+          digitalBalance: parsed.digitalBalance,
+          note
+        },
+        create: {
+          userId,
+          monthReference,
+          cashBalance: parsed.cashBalance,
+          digitalBalance: parsed.digitalBalance,
+          note
+        }
+      }),
+      ...futureSummaries.map((summary) => {
+        const currentMeta = parseSummaryMeta(summary.note);
+
+        return prisma.summary.update({
+          where: {
+            id: summary.id
+          },
+          data: {
+            note: stringifySummaryMeta({
+              ...currentMeta,
+              salaryBase: parsed.salaryBase ?? 0
+            })
+          }
+        });
+      })
+    ]);
 
     revalidateFinanceViews();
     return successResult("Fechamento salvo com sucesso.");

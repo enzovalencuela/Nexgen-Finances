@@ -1,4 +1,4 @@
-import { TransactionCategory, TransactionStatus, TransactionType, type CreditCard } from "@prisma/client";
+import { type CreditCard } from "@prisma/client";
 
 import { deleteTransaction, updateTransaction } from "@/app/actions";
 import { transactionCategoryLabels, transactionStatusLabels, transactionTypeLabels } from "@/lib/constants";
@@ -16,37 +16,43 @@ type Props = {
   compact?: boolean;
 };
 
-export function EditableTransactionCard({ transaction, creditCards, accentClass, compact = false }: Props) {
+export function EditableTransactionCard({ transaction, creditCards, accentClass }: Props) {
   const defaultDate = new Date(transaction.transactionDate).toISOString().slice(0, 10);
-  const isEditableDerived = transaction.derivedKind === "cardPayment" || transaction.derivedKind === "overdueCardBill" || transaction.derivedKind === "overdueReceivable";
+  const isEditableDerived =
+    transaction.derivedKind === "cardPayment" || transaction.derivedKind === "overdueCardBill" || transaction.derivedKind === "overdueReceivable";
   const isOverdueCardBill = transaction.derivedKind === "overdueCardBill";
   const isOverdueReceivable = transaction.derivedKind === "overdueReceivable";
   const isReadOnlyDerived = transaction.isDerived && !isEditableDerived;
 
   if (isReadOnlyDerived) {
     const isCarryover = transaction.derivedKind === "carryover";
+    const isAutomaticSalary = transaction.derivedKind === "salary";
 
     return (
       <div className="rounded-xl border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-                <p className="text-[13px] font-medium text-slate-900 dark:text-slate-100">{transaction.title}</p>
-                <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  {isCarryover ? "Automático" : "Parcela automática"}
-                </span>
-              </div>
+              <p className="text-[13px] font-medium text-slate-900 dark:text-slate-100">{transaction.title}</p>
+              <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                {isCarryover ? "Automatico" : isAutomaticSalary ? "Salario automatico" : "Parcela automatica"}
+              </span>
+            </div>
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
-              {transaction.source ? `${transaction.source} • ` : ""}
+              {transaction.source ? `${transaction.source} - ` : ""}
               {formatDate(transaction.transactionDate)}
-              {!isCarryover && transaction.installmentCurrent && transaction.installmentTotal ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}` : ""}
+              {!isCarryover && !isAutomaticSalary && transaction.installmentCurrent && transaction.installmentTotal
+                ? ` - ${transaction.installmentCurrent}/${transaction.installmentTotal}`
+                : ""}
             </p>
             <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{transaction.description}</p>
           </div>
 
           <div className="text-right">
             <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(Number(transaction.amount))}</p>
-            <p className={`text-[11px] font-medium ${accentClass}`}>{isCarryover ? "Entrada inicial automática" : "Cobrança futura automática"}</p>
+            <p className={`text-[11px] font-medium ${accentClass}`}>
+              {isCarryover ? "Entrada inicial automatica" : isAutomaticSalary ? "Entrada automatica do fechamento" : "Cobranca futura automatica"}
+            </p>
           </div>
         </div>
       </div>
@@ -59,7 +65,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-               <p className="text-[13px] font-medium text-slate-900 dark:text-slate-100">{transaction.title}</p>
+              <p className="text-[13px] font-medium text-slate-900 dark:text-slate-100">{transaction.title}</p>
               {isOverdueCardBill || isOverdueReceivable ? (
                 <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
                   {isOverdueReceivable ? "Pendente" : "Atrasado"}
@@ -67,14 +73,14 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
               ) : null}
             </div>
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
-              {transaction.source ? `${transaction.source} • ` : ""}
+              {transaction.source ? `${transaction.source} - ` : ""}
               {formatDate(transaction.transactionDate)}
               {transaction.isCreditCard && transaction.installmentCurrent && transaction.installmentTotal
-                ? ` • ${transaction.installmentCurrent}/${transaction.installmentTotal}`
+                ? ` - ${transaction.installmentCurrent}/${transaction.installmentTotal}`
                 : ""}
             </p>
-            {isOverdueCardBill ? <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">Pendente do mês anterior. Continua somando na fatura atual até ser marcado como pago.</p> : null}
-            {isOverdueReceivable ? <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">Valor a receber de mês anterior. Continua aparecendo até ser marcado como recebido.</p> : null}
+            {isOverdueCardBill ? <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">Pendente do mes anterior. Continua somando na fatura atual ate ser marcado como pago.</p> : null}
+            {isOverdueReceivable ? <p className="mt-2 text-[11px] text-amber-800 dark:text-amber-300">Valor a receber de mes anterior. Continua aparecendo ate ser marcado como recebido.</p> : null}
           </div>
 
           <div className="text-right">
@@ -91,7 +97,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
             <Input name="title" defaultValue={transaction.title} />
             <Input name="source" defaultValue={transaction.source ?? ""} placeholder="Grupo" />
           </div>
-          <Input name="description" defaultValue={transaction.description ?? ""} placeholder="Descrição" />
+          <Input name="description" defaultValue={transaction.description ?? ""} placeholder="Descricao" />
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Select name="type" defaultValue={transaction.type}>
               {Object.entries(transactionTypeLabels).map(([value, label]) => (
@@ -119,7 +125,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Input name="transactionDate" type="date" defaultValue={defaultDate} />
             <Select name="creditCardId" defaultValue={transaction.creditCardId ?? ""}>
-              <option value="">Sem cartão</option>
+              <option value="">Sem cartao</option>
               {creditCards.map((creditCard) => (
                 <option key={creditCard.id} value={creditCard.id}>
                   {creditCard.name}
@@ -131,7 +137,7 @@ export function EditableTransactionCard({ transaction, creditCards, accentClass,
           </div>
           <label className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
             <input type="checkbox" name="isCreditCard" defaultChecked={transaction.isCreditCard} className="h-4 w-4 rounded" />
-            Movimento no cartão
+            Movimento no cartao
           </label>
 
           <div className="flex flex-wrap gap-3">

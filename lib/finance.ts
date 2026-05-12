@@ -175,13 +175,21 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const persistedEntries = typedTransactions.filter(
     (transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PAID
   );
+  const automaticSalaryEntry = buildAutomaticSalaryEntry({
+    userId,
+    currentMonthStart: start,
+    salaryBase: summaryMeta.salaryBase,
+    persistedEntries
+  });
   const carryoverEntry = buildCarryoverEntry({
     userId,
     currentMonthStart: start,
     previousSummary,
     persistedEntries
   });
-  const entries = sortTransactionsByDateDesc(carryoverEntry ? [...persistedEntries, carryoverEntry] : persistedEntries);
+  const entries = sortTransactionsByDateDesc(
+    [automaticSalaryEntry, carryoverEntry, ...persistedEntries].filter((transaction): transaction is TransactionWithCard => Boolean(transaction))
+  );
   const cardPayments = getCardPayments(typedTransactions);
   const payableAdjustments = buildCardPaymentAdjustments(cardPayments);
   const payables = sortTransactionsByDateDesc([
@@ -189,10 +197,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     ...rolledOverCardBills,
     ...payableAdjustments
   ]);
-  const receivables = sortTransactionsByDateDesc([
+  const receivables = sortTransactionsByDateDesc(applySalaryReceivableOffset([
     ...monthTransactions.filter((transaction) => transaction.type === TransactionType.INCOME && transaction.status === TransactionStatus.PENDING),
     ...rolledOverReceivables
-  ]);
+  ], getSalaryReceivedTotal(entries)));
   const expenses = monthTransactions.filter(
     (transaction) => transaction.type === TransactionType.EXPENSE && transaction.status === TransactionStatus.PAID
   );
@@ -287,6 +295,58 @@ function buildCarryoverEntry({
   };
 }
 
+function buildAutomaticSalaryEntry({
+  userId,
+  currentMonthStart,
+  salaryBase,
+  persistedEntries
+}: {
+  userId: string;
+  currentMonthStart: Date;
+  salaryBase: number;
+  persistedEntries: TransactionWithCard[];
+}): TransactionWithCard | null {
+  if (salaryBase <= 0) {
+    return null;
+  }
+
+  const paidSalaryTotal = persistedEntries.reduce((total, transaction) => {
+    if (!isPaidSalaryEntry(transaction)) {
+      return total;
+    }
+
+    return total + Number(transaction.amount);
+  }, 0);
+
+  const remainingSalary = salaryBase - paidSalaryTotal;
+
+  if (remainingSalary <= 0) {
+    return null;
+  }
+
+  return {
+    id: `salary-${userId}-${currentMonthStart.toISOString().slice(0, 7)}`,
+    userId,
+    title: "Salário",
+    description: "Entrada automática baseada no salário-base definido no fechamento mensal.",
+    type: TransactionType.INCOME,
+    category: TransactionCategory.OTHER,
+    amount: new Prisma.Decimal(remainingSalary),
+    transactionDate: currentMonthStart,
+    status: TransactionStatus.PAID,
+    source: "Fechamento",
+    isCreditCard: false,
+    installmentCurrent: null,
+    installmentTotal: null,
+    creditCardId: null,
+    creditCard: null,
+    createdAt: currentMonthStart,
+    updatedAt: currentMonthStart,
+    isDerived: true,
+    derivedKind: "salary"
+  };
+}
+
 function buildGeneratedInstallments({
   selectedMonthStart,
   currentMonthTransactions,
@@ -367,6 +427,52 @@ function buildRolledOverReceivables({
       isDerived: true,
       derivedKind: "overdueReceivable"
     }));
+}
+
+function applySalaryReceivableOffset(receivables: TransactionWithCard[], salaryReceivedTotal: number) {
+  if (salaryReceivedTotal <= 0) {
+    return receivables;
+  }
+
+  const adjustedReceivables: Array<TransactionWithCard | null> = [...receivables];
+  const salaryIndexes: Array<{ transaction: TransactionWithCard; index: number }> = [];
+
+  adjustedReceivables.forEach((transaction, index) => {
+    if (transaction && hasSalaryTitle(transaction)) {
+      salaryIndexes.push({ transaction, index });
+    }
+  });
+
+  salaryIndexes.sort((left, right) => {
+    return new Date(left.transaction.transactionDate).getTime() - new Date(right.transaction.transactionDate).getTime();
+  });
+
+  let remainingOffset = salaryReceivedTotal;
+
+  for (const { transaction, index } of salaryIndexes) {
+    if (remainingOffset <= 0) {
+      break;
+    }
+
+    const currentAmount = Number(transaction.amount);
+    const nextAmount = Math.max(currentAmount - remainingOffset, 0);
+    remainingOffset = Math.max(remainingOffset - currentAmount, 0);
+
+    if (nextAmount === 0) {
+      adjustedReceivables[index] = null;
+      continue;
+    }
+
+    adjustedReceivables[index] = {
+      ...transaction,
+      amount: new Prisma.Decimal(nextAmount),
+      description: transaction.description
+        ? `${transaction.description} Saldo pendente após abatimento automático do salário recebido.`
+        : "Saldo pendente após abatimento automático do salário recebido."
+    };
+  }
+
+  return adjustedReceivables.filter((transaction): transaction is TransactionWithCard => Boolean(transaction));
 }
 
 function buildCardInvoices({
@@ -482,6 +588,28 @@ function hasCarryoverEntry(entries: TransactionWithCard[]) {
 
     return title.includes("mes passado") || source.includes("mes passado") || title.includes("saldo anterior") || source.includes("saldo anterior");
   });
+}
+
+function getSalaryReceivedTotal(entries: TransactionWithCard[]) {
+  return entries.reduce((total, entry) => {
+    if (!isPaidSalaryEntry(entry)) {
+      return total;
+    }
+
+    return total + Number(entry.amount);
+  }, 0);
+}
+
+function isPaidSalaryEntry(transaction: Pick<TransactionWithCard, "title" | "type" | "status">) {
+  return (
+    transaction.type === TransactionType.INCOME &&
+    transaction.status === TransactionStatus.PAID &&
+    hasSalaryTitle(transaction)
+  );
+}
+
+function hasSalaryTitle(transaction: Pick<TransactionWithCard, "title">) {
+  return normalizeEntryText(transaction.title) === "salario";
 }
 
 function normalizeEntryText(value?: string | null) {
