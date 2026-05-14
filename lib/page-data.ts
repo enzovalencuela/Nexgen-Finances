@@ -11,13 +11,13 @@ export async function getAppPageData(searchParams?: AppPageSearchParams) {
   const session = await auth();
 
   if (!session?.user?.email) {
-    redirect("/login");
+    redirect("/painel");
   }
 
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/painel");
   }
 
   const params = searchParams ?? {};

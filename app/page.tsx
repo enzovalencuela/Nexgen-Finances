@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const session = await auth();
 
-  redirect(session?.user ? "/painel" : "/login");
+  redirect(session?.user ? "/painel" : "/painel");
 }

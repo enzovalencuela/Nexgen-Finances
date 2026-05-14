@@ -66,7 +66,7 @@ export function SummaryForm({
 }: {
   selectedMonth: string;
   summary: { cashBalance: number; digitalBalance: number } | null;
-  summaryMeta: { salaryBase: number; purchaseEstimate: number; investmentWithdrawn: number; noteText: string };
+  summaryMeta: { salaryBase: number; salaryAutoEntry: boolean; purchaseEstimate: number; investmentWithdrawn: number; noteText: string };
 }) {
   return (
     <ActionForm serverAction={upsertSummary} className="grid gap-3">
@@ -75,6 +75,10 @@ export function SummaryForm({
         <Input name="salaryBase" type="number" step="0.01" placeholder="Salario base" defaultValue={summaryMeta.salaryBase} />
         <Input name="purchaseEstimate" type="number" step="0.01" placeholder="A comprar" defaultValue={summaryMeta.purchaseEstimate} />
       </div>
+      <label className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        <input type="checkbox" name="salaryAutoEntry" defaultChecked={summaryMeta.salaryAutoEntry} className="h-4 w-4 rounded" />
+        Criar entrada automatica de Salario neste e nos proximos meses
+      </label>
       <div className="grid gap-3 md:grid-cols-2">
         <Input name="cashBalance" type="number" step="0.01" placeholder="Sobra em dinheiro" defaultValue={summary?.cashBalance ?? 0} required />
         <Input name="digitalBalance" type="number" step="0.01" placeholder="Sobra digital" defaultValue={summary?.digitalBalance ?? 0} required />

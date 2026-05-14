@@ -179,6 +179,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     userId,
     currentMonthStart: start,
     salaryBase: summaryMeta.salaryBase,
+    salaryAutoEntry: summaryMeta.salaryAutoEntry,
     persistedEntries
   });
   const carryoverEntry = buildCarryoverEntry({
@@ -299,14 +300,16 @@ function buildAutomaticSalaryEntry({
   userId,
   currentMonthStart,
   salaryBase,
+  salaryAutoEntry,
   persistedEntries
 }: {
   userId: string;
   currentMonthStart: Date;
   salaryBase: number;
+  salaryAutoEntry: boolean;
   persistedEntries: TransactionWithCard[];
 }): TransactionWithCard | null {
-  if (salaryBase <= 0) {
+  if (!salaryAutoEntry || salaryBase <= 0) {
     return null;
   }
 

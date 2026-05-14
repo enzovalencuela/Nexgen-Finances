@@ -47,6 +47,7 @@ const summarySchema = z.object({
   cashBalance: z.coerce.number(),
   digitalBalance: z.coerce.number(),
   salaryBase: z.coerce.number().min(0).optional(),
+  salaryAutoEntry: z.coerce.boolean().optional(),
   purchaseEstimate: z.coerce.number().min(0).optional(),
   investmentWithdrawn: z.coerce.number().min(0).optional(),
   noteText: z.string().optional()
@@ -340,6 +341,7 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
       cashBalance: formData.get("cashBalance"),
       digitalBalance: formData.get("digitalBalance"),
       salaryBase: formData.get("salaryBase") || undefined,
+      salaryAutoEntry: formData.get("salaryAutoEntry") === "on",
       purchaseEstimate: formData.get("purchaseEstimate") || undefined,
       investmentWithdrawn: formData.get("investmentWithdrawn") || undefined,
       noteText: formData.get("noteText") || undefined
@@ -347,6 +349,7 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
 
     const note = stringifySummaryMeta({
       salaryBase: parsed.salaryBase,
+      salaryAutoEntry: parsed.salaryAutoEntry,
       purchaseEstimate: parsed.purchaseEstimate,
       investmentWithdrawn: parsed.investmentWithdrawn,
       noteText: parsed.noteText
@@ -399,7 +402,8 @@ export async function upsertSummary(formData: FormData): Promise<ActionResult> {
           data: {
             note: stringifySummaryMeta({
               ...currentMeta,
-              salaryBase: parsed.salaryBase ?? 0
+              salaryBase: parsed.salaryBase ?? 0,
+              salaryAutoEntry: parsed.salaryAutoEntry ?? false
             })
           }
         });

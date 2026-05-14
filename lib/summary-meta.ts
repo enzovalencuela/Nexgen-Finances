@@ -1,5 +1,6 @@
 export type SummaryMeta = {
   salaryBase: number;
+  salaryAutoEntry: boolean;
   purchaseEstimate: number;
   investmentWithdrawn: number;
   noteText: string;
@@ -7,6 +8,7 @@ export type SummaryMeta = {
 
 export const defaultSummaryMeta: SummaryMeta = {
   salaryBase: 0,
+  salaryAutoEntry: false,
   purchaseEstimate: 0,
   investmentWithdrawn: 0,
   noteText: ""
@@ -22,6 +24,7 @@ export function parseSummaryMeta(note?: string | null): SummaryMeta {
 
     return {
       salaryBase: Number(parsed.salaryBase ?? 0),
+      salaryAutoEntry: Boolean(parsed.salaryAutoEntry),
       purchaseEstimate: Number(parsed.purchaseEstimate ?? 0),
       investmentWithdrawn: Number(parsed.investmentWithdrawn ?? 0),
       noteText: typeof parsed.noteText === "string" ? parsed.noteText : ""
@@ -37,6 +40,7 @@ export function parseSummaryMeta(note?: string | null): SummaryMeta {
 export function stringifySummaryMeta(meta: Partial<SummaryMeta>) {
   const normalized: SummaryMeta = {
     salaryBase: Number(meta.salaryBase ?? 0),
+    salaryAutoEntry: Boolean(meta.salaryAutoEntry),
     purchaseEstimate: Number(meta.purchaseEstimate ?? 0),
     investmentWithdrawn: Number(meta.investmentWithdrawn ?? 0),
     noteText: meta.noteText?.trim() ?? ""
@@ -44,6 +48,7 @@ export function stringifySummaryMeta(meta: Partial<SummaryMeta>) {
 
   const hasContent =
     normalized.salaryBase !== 0 ||
+    normalized.salaryAutoEntry ||
     normalized.purchaseEstimate !== 0 ||
     normalized.investmentWithdrawn !== 0 ||
     normalized.noteText.length > 0;
