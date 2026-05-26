@@ -44,7 +44,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     }
   };
 
-  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins, pendingCardBills, pendingReceivables] = await Promise.all([
+  const [transactions, investmentHistory, summary, creditCards, previousSummary, previousFilledSummary, installmentOrigins, pendingBills, pendingCardBills, pendingReceivables] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include: {
@@ -94,6 +94,23 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
       },
       orderBy: {
         monthReference: "desc"
+      }
+    }),
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        type: TransactionType.BILL,
+        status: TransactionStatus.PENDING,
+        isCreditCard: false,
+        transactionDate: {
+          lt: start
+        }
+      },
+      include: {
+        creditCard: true
+      },
+      orderBy: {
+        transactionDate: "desc"
       }
     }),
     prisma.transaction.findMany({
@@ -163,6 +180,10 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
     selectedMonthStart: start,
     pendingCardBills: pendingCardBills as TransactionWithCard[]
   });
+  const rolledOverBills = buildRolledOverBills({
+    selectedMonthStart: start,
+    pendingBills: pendingBills as TransactionWithCard[]
+  });
   const rolledOverReceivables = buildRolledOverReceivables({
     selectedMonthStart: start,
     pendingReceivables: pendingReceivables as TransactionWithCard[]
@@ -195,6 +216,7 @@ export async function getDashboardData({ userId, month }: DashboardDataParams): 
   const payableAdjustments = buildCardPaymentAdjustments(cardPayments);
   const payables = sortTransactionsByDateDesc([
     ...monthTransactions.filter((transaction) => transaction.type === TransactionType.BILL),
+    ...rolledOverBills,
     ...rolledOverCardBills,
     ...payableAdjustments
   ]);
@@ -413,6 +435,22 @@ function buildRolledOverCardBills({
       ...transaction,
       isDerived: true,
       derivedKind: "overdueCardBill"
+    }));
+}
+
+function buildRolledOverBills({
+  selectedMonthStart,
+  pendingBills
+}: {
+  selectedMonthStart: Date;
+  pendingBills: TransactionWithCard[];
+}): TransactionWithCard[] {
+  return pendingBills
+    .filter((transaction) => diffInMonths(startOfMonth(transaction.transactionDate), selectedMonthStart) > 0)
+    .map((transaction) => ({
+      ...transaction,
+      isDerived: true,
+      derivedKind: "overdueBill"
     }));
 }
 
